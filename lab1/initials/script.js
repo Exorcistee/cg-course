@@ -1,14 +1,16 @@
 const y = 5;
-const width = 100;
-const length = 400;
+const width = 30;
+const length = 120;
 let lastX = {x : 0};
 
 window.onload = () => {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
-
+    context.scale(width/25, length / 100);
     drawU(context, lastX);
+    context.scale(width/25, length / 100);
     drawK(context, lastX);
+    context.scale(width/25, length / 100);
     drawV(context, lastX);
 }
 
@@ -36,7 +38,7 @@ function drawU(context, lastX) {
     context.rotate(1.57);
     context.fillRect(0, 0, length, width);
 
-    lastX.x = length + 30;
+    lastX.x = length + length * 0.3;
 
     context.setTransform(1,0,0,1,0,0);
 }
@@ -59,7 +61,7 @@ function drawK(context, lastX) {
     context.rotate(-1.57);
     context.fillRect(0, 0, length * 1.2, width);
 
-    lastX.x = length * 1.4 + length * 1.2 + 30;
+    lastX.x = length * 1.4 + length * 1.2 + length * 0.3;
 
     context.setTransform(1,0,0,1,0,0);
 }
@@ -114,7 +116,7 @@ function drawV(context, lastX) {
     context.translate( -length / 2, - length / 2 - width / 4);
     context.fillRect(0, 0, length / 2, width);
 
-    lastX.x = length + 30;
+    lastX.x = length + length * 0.3;
 
     context.setTransform(1,0,0,1,0,0);
 }
