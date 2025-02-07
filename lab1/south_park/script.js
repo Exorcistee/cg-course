@@ -14,25 +14,72 @@ function drawHead(context)
     ellipseX = 20;
     ellipseY = 17;
     radiusHead = 60;
+
     context.beginPath();
-    context.ellipse(0, 0, radiusHead, radiusHead, -Math.PI / 3, 0, 2 * Math.PI);
-    context.fillStyle="rgb(255, 255, 255)";
+    context.fillStyle="rgb(47, 0, 255)";
+    context.arc(0, 0, radiusHead, getRadians(180), getRadians(360));
     context.fill();
-    context.stroke();
+
+    context.beginPath();
+    context.fillStyle="rgb(255, 255, 255)";
+    context.ellipse(0, radiusHead / 2, radiusHead * 2, radiusHead, 0, 0, 2 * Math.PI);
+    context.fill(); 
+
+    context.beginPath();
+    context.fillStyle="rgb(255, 0, 0)";
+    context.ellipse(0, radiusHead / 2, radiusHead * 2, radiusHead, 0, 0, 2 * Math.PI);
+    context.fill();
+
+    context.beginPath();
+    context.fillStyle="rgb(255, 255, 255)";
+    context.ellipse(0, radiusHead/ 1.5, radiusHead * 2, radiusHead, 0, 0, 2 * Math.PI);
+    context.fill();
+
+    context.fillStyle="rgb(255, 255, 255)";
+    context.fillRect(radiusHead, -radiusHead, canvas.width, canvas.height);
+    context.fillStyle="rgb(255, 255, 255)";
+    context.fillRect(-radiusHead*2, -radiusHead, radiusHead, canvas.height);
+
+    context.beginPath();
+    context.arc(0, 0, radiusHead, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(240, 213, 171)";
+    context.fill();  
+    
+    context.beginPath();
+    context.ellipse(0, - radiusHead / 5.5, radiusHead, radiusHead / 5, 0, 0, 2 * Math.PI);
+    context.fillStyle="rgb(240, 213, 171)";
+    context.fill();  
+    
     context.beginPath();
     context.ellipse(ellipseY, 0, ellipseX, ellipseY, Math.PI / 3, 0, 2 * Math.PI);
     context.fillStyle="rgb(255, 255, 255)";
     context.fill();
-    context.stroke();
+
     context.beginPath();
     context.ellipse(-ellipseY, 0, ellipseX, ellipseY, -Math.PI / 3, 0, 2 * Math.PI);
     context.fillStyle="rgb(255, 255, 255)";
     context.fill();
-    context.stroke();
+
     context.beginPath();
-    context.fillStyle="rgb(47, 0, 255)";
-    context.arc(0, 0, radiusHead, getRadians(180), getRadians(360));
-    context.fill();   
+    context.arc(-ellipseY / 2, 0, 2, getRadians(0), getRadians(360), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();  
+
+    context.beginPath();
+    context.arc(ellipseY / 2, 0, 2, getRadians(0), getRadians(360), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();  
+
+    context.beginPath();
+    context.ellipse(0, radiusHead / 1.5, ellipseX / 2, ellipseY / 5, 0, 0, Math.PI);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.stroke();  
+    
+    context.beginPath();
+    context.arc(0, -radiusHead, radiusHead / 5, getRadians(0), getRadians(360), 0, 0);
+    context.fillStyle="rgb(255, 0, 0)";
+    context.fill();  
+
 }
 
 function useDragAndDrop(element)

@@ -1,6 +1,6 @@
 const y = 5;
-const width = 30;
-const length = 120;
+const width = 20;
+const length = 80;
 let lastX = {x : 0};
 
 window.onload = () => {
