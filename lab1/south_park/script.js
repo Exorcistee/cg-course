@@ -40,11 +40,41 @@ function drawHead(context)
     context.fillStyle="rgb(255, 255, 255)";
     context.fillRect(-radiusHead*2, -radiusHead, radiusHead, canvas.height);
 
+    
+    context.fillStyle="rgb(47, 0, 255)";
+    context.fillRect(0, radiusHead * 1.7, radiusHead / 1.2, radiusHead / 4);
+
+    context.fillStyle="rgb(47, 0, 255)";
+    context.fillRect(-radiusHead/1.2, radiusHead * 1.7, radiusHead / 1.2, radiusHead / 4);
+
+    context.beginPath();
+    context.fillStyle="rgb(168, 85, 2)";
+    context.ellipse(radiusHead / 1.4, radiusHead, radiusHead / 2, ellipseY / 3, getRadians(240), 0, Math.PI);
+    context.ellipse(0, radiusHead * 1.7, radiusHead, ellipseY / 2, getRadians(360), 0, Math.PI);
+    context.ellipse(-radiusHead / 1.4, radiusHead, radiusHead / 2, ellipseY / 3, getRadians(-240), 0, Math.PI);
+
+    context.fill();
+
+    context.beginPath();
+    context.arc(-radiusHead / 10, radiusHead * 1.2, radiusHead / 20, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();  
+
+    context.beginPath();
+    context.arc(-radiusHead / 10, radiusHead * 1.4, radiusHead / 20, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();  
+
+    context.beginPath();
+    context.arc(-radiusHead / 10, radiusHead * 1.6, radiusHead / 20, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();  
+
     context.beginPath();
     context.arc(0, 0, radiusHead, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
     context.fillStyle="rgb(240, 213, 171)";
     context.fill();  
-    
+
     context.beginPath();
     context.ellipse(0, - radiusHead / 5.5, radiusHead, radiusHead / 5, 0, 0, 2 * Math.PI);
     context.fillStyle="rgb(240, 213, 171)";
@@ -79,6 +109,41 @@ function drawHead(context)
     context.arc(0, -radiusHead, radiusHead / 5, getRadians(0), getRadians(360), 0, 0);
     context.fillStyle="rgb(255, 0, 0)";
     context.fill();  
+
+    context.beginPath();
+    context.moveTo(-radiusHead / 1.4, radiusHead * 1.5);
+    context.lineTo(-radiusHead / 2, radiusHead);
+    context.stroke(); 
+
+    context.beginPath();
+    context.moveTo(radiusHead / 1.4, radiusHead * 1.5);
+    context.lineTo(radiusHead / 2, radiusHead);
+    context.stroke(); 
+
+    context.beginPath();
+    context.moveTo(0, radiusHead);
+    context.lineTo(0, radiusHead * 1.83);
+    context.stroke(); 
+
+    context.beginPath();
+    context.arc(-radiusHead / 1.2, radiusHead * 1.5, radiusHead / 4, getRadians(0), getRadians(360), 0, 0);
+    context.fillStyle="rgb(255, 0, 0)";
+    context.fill();  
+
+    context.beginPath();
+    context.arc(radiusHead / 1.2, radiusHead * 1.5, radiusHead / 4, getRadians(0), getRadians(360), 0, 0);
+    context.fillStyle="rgb(255, 0, 0)";
+    context.fill(); 
+
+    context.beginPath();
+    context.ellipse(-radiusHead / 2.2, radiusHead * 2, ellipseX * 1.2, ellipseY / 3, getRadians(180), 0, Math.PI);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();
+
+    context.beginPath();
+    context.ellipse(radiusHead / 2.2, radiusHead * 2, ellipseX * 1.2, ellipseY / 3, getRadians(180), 0, Math.PI);
+    context.fillStyle="rgb(0, 0, 0)";
+    context.fill();
 
 }
 
