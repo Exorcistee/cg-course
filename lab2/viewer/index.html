@@ -7,11 +7,11 @@
     <title>Viewer</title>
 </head>
 <body>
+    <input type="file" id="fileInput" style="display: none; " accept=".png, .jpeg, .bmp">
     <div class="buttons-container">
-        <input type="file" id="fileInput" style="display: none; " accept=".png, .jpeg, .bmp">
-        <button id="open-button"">Open</button>
-        <canvas id="canvas" width="1280" height="720" style="cursor: move; position: relative;"></canvas>
+        <canvas id="canvas" width="1280" height="720" style="cursor: move; position: absolute; "></canvas>
     </div>
+    <button id="open-button" style ="position: absolute; right: 50%; height: 50px; width: 50px;" >Open</button>
     <script src="script.js"></script>
 </body>
 </html>
