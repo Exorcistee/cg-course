@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
-    const button = document.getElementById('open-button');
+    const button = document.getElementById('buttons-container');
 
     function openImage() 
     {   

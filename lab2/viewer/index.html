@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Painter</title>
+    <title>Viewer</title>
 </head>
 <body>
-    <canvas id="canvas" width="1280" height="720" style="cursor: move; position: absolute;"></canvas>
     <div class="buttons-container">
         <input type="file" id="fileInput" style="display: none; " accept=".png, .jpeg, .bmp">
-        <button id="open-button" style="left: 50%;">Open</button>
+        <button id="open-button"">Open</button>
+        <canvas id="canvas" width="1280" height="720" style="cursor: move; position: relative;"></canvas>
     </div>
     <script src="script.js"></script>
 </body>
