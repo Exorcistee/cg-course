@@ -55,8 +55,14 @@ document.addEventListener('DOMContentLoaded', function () {
             reader.onload = function (event) {
                 const img = new Image();
                 img.onload = function () {
-                    canvas.setAttribute("width", window.getComputedStyle(wrapper).width);
-                    canvas.setAttribute("height", window.getComputedStyle(wrapper).height);
+                    canvas.width = 1280;
+                    canvas.height = 720;
+                    if (!(this.width > canvas.width)){
+                        canvas.width = this.width;   
+                    }
+                    if (!(this.height > canvas.height)){
+                        canvas.height = this.height;   
+                    }
                     context.clearRect(0, 0, canvas.width, canvas.height);
                     context.drawImage(img, 0, 0, canvas.width, canvas.height);
                 };
