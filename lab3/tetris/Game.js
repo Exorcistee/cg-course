@@ -72,18 +72,18 @@ export default class Game {
   }
 
   restartGame() {
-    this.clearBoardAndScore();
     this.score = 0;
     this.level = 1;
     this.linesLeft = 10;
     this.linesCleared = 0;
+    this.renderer.updateSidePanel();
     const gameOverMessage = document.getElementById('gameOverMessage');
     if (gameOverMessage) {
         gameOverMessage.remove();
     }
     this.isPaused = false;
-    this.togglePauseMessage();
-    this.spawnPiece();
+    this.renderer.togglePauseMessage();
+    this.pieceFactory.();
     this.updateSidePanel();
 }
 
@@ -121,12 +121,15 @@ export default class Game {
       case "ArrowUp":
         this.rotatePiece(); 
         break;
-        case "p":
+      case "p":
             if (this.status == "GameOver") {
                 this.restartGame();  // Перезапуск игры
-            } else {
-                this.isPaused = !this.isPaused; // Переключаем состояние паузы
-                this.togglePauseMessage(); // Обновляем видимость сообщения паузы
+            } else if (this.status == "Start") {
+              this.restartGame();
+            }
+            else {
+              this.isPaused = !this.isPaused; // Переключаем состояние паузы
+              //this.togglePauseMessage(); // Обновляем видимость сообщения паузы
             }
             break;
       }
