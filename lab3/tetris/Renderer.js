@@ -44,9 +44,9 @@ export class Renderer {
     togglePauseMessage(game) {
         const pauseMessage = document.getElementById('pauseMessage');
         if (game.status == "Pause") {
-        pauseMessage.style.display = 'block'; // Show the message
+            pauseMessage.style.display = 'block'; // Show the message
         } else {
-        pauseMessage.style.display = 'none'; // Hide the message
+            pauseMessage.style.display = 'none'; // Hide the message
         }
     }
 
@@ -60,8 +60,6 @@ export class Renderer {
     }
 
     toggleStartMessage(game) {
-        console.log(game);
-        console.log(game.getStatus());
         const pauseMessage = document.getElementById('Start');
         if (game.status == "Start") {
             pauseMessage.style.display = 'block'; // Show the message

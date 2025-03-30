@@ -10,6 +10,14 @@ export class Board {
     this.dropInterval = 500;
   }
 
+  addPiece(piece) {
+    this.pieceGroup = new THREE.Group(); // Создаём группу для текущей фигуры
+    piece.blocks.forEach(block => {
+      this.pieceGroup.add(block); // Добавляем блоки фигуры в группу
+    });
+    this.fixedGroup.add(this.pieceGroup); // Добавляем группу на поле
+  }
+
   drawBoard() {
     const borderGroup = new THREE.Group();
 
@@ -41,20 +49,29 @@ export class Board {
     return cube;
   }
 
-//   isValidMove(piece, dx, dy) {
-//     const matrix = piece.shape;
-//     for (let row = 0; row < matrix.length; row++) {
-//       for (let col = 0; col < matrix[row].length; col++) {
-//         if (matrix[row][col]) {
-//           const newX = piece.x + col + dx;
-//           const newY = piece.y + row + dy;
-//           if (newX < 0 || newX >= this.boardWidth || newY < 0 || newY >= this.boardHeight) return false;
-//           if (this.board[newY] && this.board[newY][newX] !== null) return false;
-//         }
-//       }
-//     }
-//     return true;
-//   }
+  isValidMove(piece, dx, dy) {
+    const matrix = piece.shape;
+    for (let row = 0; row < matrix.length; row++) {
+      for (let col = 0; col < matrix[row].length; col++) {
+        if (matrix[row][col]) {
+          const newX = piece.x + col + dx;
+          const newY = piece.y + row + dy;
+  
+          // Проверка выхода за пределы доски
+          if (newX < 0 || newX >= this.boardWidth || newY < 0 || newY >= this.boardHeight) {
+            return false;
+          }
+  
+          // Проверка на занятость ячейки
+          if (this.board[newY] && this.board[newY][newX] !== null) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
 
   checkLines() {
     let count = 0;
@@ -71,6 +88,52 @@ export class Board {
         count++;
       }
     }
+  }
+
+  fixPiece(piece) {
+    let index = 0;
+    const matrix = piece.shape;
+  
+    // Проверка на наличие блоков в массиве blocks перед фиксацией
+    if (piece.blocks.length === 0) {
+      return; // Прерываем выполнение, если нет блоков для фиксации
+    }
+  
+    // Проходим по каждому элементу фигуры
+    for (let row = 0; row < matrix.length; row++) {
+      for (let col = 0; col < matrix[row].length; col++) {
+        if (matrix[row][col]) {
+          const boardX = piece.x + col;
+          const boardY = piece.y + row;
+  
+          // Получаем блок из массива blocks
+          const cube = piece.blocks[index];
+  
+          // Проверяем, что блок существует
+          if (cube instanceof THREE.Object3D) {
+            console.log(boardX, boardY);
+            console.log(this.board);
+            this.board[boardY][boardX] = cube; // Сохраняем блок на доске
+            this.fixedGroup.add(cube); // Добавляем блок в fixedGroup
+          } else {
+            console.error("Block is not valid:", cube); // Логирование ошибки, если блок не найден
+          }
+  
+          index++;
+        }
+      }
+    }
+  
+    this.audio_pieceLand.play();
+    
+    // Очищаем массив blocks и pieceGroup после их фиксации
+    piece.blocks = []; // Очищаем массив блоков
+    while (this.pieceGroup.children.length > 0) {
+      const removedBlock = this.pieceGroup.children[0];
+      this.pieceGroup.remove(removedBlock);
+    }
+  
+    this.checkLines(); // Проверка линий после фиксации фигуры
   }
 
   removeLine(lineY) {
