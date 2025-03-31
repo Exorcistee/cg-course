@@ -1,0 +1,11 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; 
+    background-size: cover; /* Заполняет весь экран */
+    background-position: center; /* Центрирует изображение */
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Фиксирует фон */
+    background-color: #222; /* Фолбэк цвет */
+}
+

@@ -4,6 +4,22 @@ import { SoundManager } from './SoundManager.js';
 import { PieceFactory } from './PieceFactory.js';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
 
+class GameState {
+  constructor(game) {
+    this.game = game;
+  }
+  handleInput() {}
+}
+
+class PlayingState extends GameState {
+  handleInput(e) {
+    switch(e.key) {
+      case 'ArrowLeft': this.game.moveLeft(); break;
+      case 'p': this.game.pause(); break;
+    }
+  }
+}
+
 export default class Game {
   constructor({ boardWidth = 10, boardHeight = 20, blockSize = 1 } = {}) {
     this.level = 1;
@@ -16,6 +32,7 @@ export default class Game {
     this.board = new Board(boardWidth, boardHeight, blockSize);
     this.soundManager = new SoundManager();
     this.pieceFactory = new PieceFactory();
+    this.nextPiece = null;
     this.renderer = new Renderer(blockSize, boardHeight, this.board, this);
     this.board.addScene(this.renderer.scene);
     window.addEventListener('keydown', (e) => this.onKeyDown(e));
@@ -45,123 +62,156 @@ export default class Game {
 
   setScore(newScore) {
     console.log(newScore);
-    this.score = newScore; 
+    this.score = newScore;
   }
 
   getLinesLeft() {
-    return this.linesLeft; 
+    return this.linesLeft;
   }
 
   setLinesLeft(newLinesLeft) {
-    console.log(newLinesLeft);
-    this.linesLeft = newLinesLeft;
-  }
-
-  spawnPiece() {
-    this.currentPiece = this.pieceFactory.createPiece();
-    this.currentPiece.createBlocks(this.board.blockSize);
-    
-    this.board.setCurrentPiece(this.currentPiece);  
-    this.renderer.addPiece(this.currentPiece);
-    
-    if (!this.board.isValidSpawn(this.currentPiece)) {
-        this.gameOver();
+    if (newLinesLeft <= 0) {
+      this.levelUp();
+    }
+    else {
+      this.linesLeft = newLinesLeft;
     }
   }
 
+  getSoundManager() {
+    return this.soundManager;
+  }
+
+  spawnPiece() {
+    if (!this.currentPiece) {
+        this.currentPiece = this.pieceFactory.createPiece();
+        this.nextPiece = this.pieceFactory.createPiece();
+    } else {
+        this.currentPiece = this.nextPiece;
+        this.nextPiece = this.pieceFactory.createPiece();
+    }
+    this.currentPiece.createBlocks(this.board.blockSize);
+    this.board.setCurrentPiece(this.currentPiece);
+    this.renderer.addPiece(this.currentPiece);
+    this.renderer.updateNextPiecePreview(this.nextPiece);  
+    if (!this.board.isValidSpawn(this.currentPiece)) {
+        this.gameOver();
+    }
+
+}
+
+
   updateSidePanel() {
-     this.renderer.updateSidePanel(this.getLevel(), this.getScore(), this.getLinesLeft());
+    this.renderer.updateSidePanel(this.getLevel(), this.getScore(), this.getLinesLeft());
   }
 
   update(game) {
     if (this.isPaused) return;
-    
+
     const now = Date.now();
     if (now - this.lastDropTime > this.board.dropInterval) {
-        this.lastDropTime = now;
-        
-        if (this.board.isValidMove(this.currentPiece, 0, -1)) {
-            this.board.currentPiece.y -= 1;
-            this.renderer.updatePiecePosition(this.board.currentPiece);
-        } else {
-            this.board.fixCurrentPiece(this.board.currentPiece, game);
-            this.updateSidePanel();
-            this.soundManager.playPieceLand();
-            this.spawnPiece();
-        }
+      this.lastDropTime = now;
+
+      if (this.board.isValidMove(this.currentPiece, 0, -1)) {
+        this.board.currentPiece.y -= 1;
+        this.renderer.updatePiecePosition(this.board.currentPiece);
+      } else {
+        this.board.fixCurrentPiece(this.board.currentPiece, game);
+        this.updateSidePanel();
+        this.spawnPiece();
+      }
     }
+  }
+
+  gameOver() {
+    this.isPaused = true;
+    this.setStatus("GameOver");
+    this.soundManager.playGameOver();
+    this.renderer.toggleGameOverMessage(this);
+    this.board.clearBoard();
   }
 
   restartGame() {
     this.score = 0;
     this.level = 1;
-    this.linesLeft = 10;
+    this.linesLeft = 1;
     this.linesCleared = 0;
     this.renderer.updateSidePanel(this.score, this.level, this.linesLeft);
     const gameOverMessage = document.getElementById('gameOverMessage');
     if (gameOverMessage) {
-        gameOverMessage.remove();
+      gameOverMessage.remove();
     }
     this.isPaused = false;
-    this.renderer.toggleStartMessage(this.getStatus());
-    this.updateSidePanel();
+    this.renderer.toggleStartMessage(this);
+    this.renderer.updateSidePanel();
     this.spawnPiece();
-}
+  }
 
   levelUp() {
-    this.clearBoardAndScore();
+    this.board.clearBoard();
     this.isPaused = !this.isPaused;
-    this.toggleLevelUpMessage();
+    this.setStatus("LevelUp");
+    this.renderer.toggleLevelUpMessage(this);
     this.level++;
-    this.linesLeft = 10 + (this.level - 1) * 2;
-    this.dropInterval *= 0.8; 
+    this.linesLeft = 1 + (this.level - 1) * 2;
+    this.dropInterval *= 0.8;
     this.linesCleared = 0;
-    this.audio_levelUp.play();
+    this.renderer.updateSidePanel(this.score, this.level, this.linesLeft);
+    this.soundManager.playLevelUp();
   }
 
   onKeyDown(e) {
     switch (e.key) {
       case "ArrowLeft":
-        if (this.board.isValidMove(this.currentPiece, -1, 0) && !this.isPaused) { 
+        if (this.board.isValidMove(this.currentPiece, -1, 0) && !this.isPaused) {
           this.currentPiece.x -= 1;
           this.renderer.updatePiecePosition(this.currentPiece);
         }
         break;
       case "ArrowRight":
-        if (this.board.isValidMove(this.currentPiece, 1, 0) && !this.isPaused) { 
+        if (this.board.isValidMove(this.currentPiece, 1, 0) && !this.isPaused) {
           this.currentPiece.x += 1;
           this.renderer.updatePiecePosition(this.currentPiece);
         }
         break;
       case "ArrowDown":
-        if (this.board.isValidMove(this.currentPiece, 0, -1) && !this.isPaused) { 
+        if (this.board.isValidMove(this.currentPiece, 0, -1) && !this.isPaused) {
           this.currentPiece.y -= 1;
           this.renderer.updatePiecePosition(this.currentPiece);
         }
         break;
       case "ArrowUp":
         if (!this.isPaused) {
-        this.board.rotatePiece(this.currentPiece);
-        this.renderer.updatePiecePosition(this.currentPiece); 
-        break;
-      }
+          this.board.rotatePiece(this.currentPiece);
+          this.renderer.updatePiecePosition(this.currentPiece);
+          break;
+        }
       case "p":
         if (this.status == "GameOver") {
-          this.restartGame();  
+          this.isPaused = !this.isPaused;
+          this.status = "OnGoing";
+          this.renderer.toggleGameOverMessage(this);
+          this.animate();
         } else if (this.status == "Start") {
           this.isPaused = !this.isPaused;
           this.status = "OnGoing";
           this.restartGame();
+          this.animate();
         } else if (this.status == "Pause") {
           this.status = "OnGoing";
           this.renderer.togglePauseMessage(this);
           this.isPaused = !this.isPaused;
-          this.animate(); 
+          this.animate();
+        } else if (this.status == "LevelUp") {
+          this.isPaused = !this.isPaused;
+          this.status = "OnGoing";
+          this.renderer.toggleLevelUpMessage(this);
+          this.animate();
         }
         else {
           this.status = "Pause";
           this.renderer.togglePauseMessage(this);
-          this.isPaused = !this.isPaused; 
+          this.isPaused = !this.isPaused;
         }
 
         break;
