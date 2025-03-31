@@ -4,22 +4,6 @@ import { SoundManager } from './SoundManager.js';
 import { PieceFactory } from './PieceFactory.js';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
 
-class GameState {
-  constructor(game) {
-    this.game = game;
-  }
-  handleInput() {}
-}
-
-class PlayingState extends GameState {
-  handleInput(e) {
-    switch(e.key) {
-      case 'ArrowLeft': this.game.moveLeft(); break;
-      case 'p': this.game.pause(); break;
-    }
-  }
-}
-
 export default class Game {
   constructor({ boardWidth = 10, boardHeight = 20, blockSize = 1 } = {}) {
     this.level = 1;
@@ -100,11 +84,6 @@ export default class Game {
 
 }
 
-
-  updateSidePanel() {
-    this.renderer.updateSidePanel(this.getLevel(), this.getScore(), this.getLinesLeft());
-  }
-
   update(game) {
     if (this.isPaused) return;
 
@@ -117,7 +96,7 @@ export default class Game {
         this.renderer.updatePiecePosition(this.board.currentPiece);
       } else {
         this.board.fixCurrentPiece(this.board.currentPiece, game);
-        this.updateSidePanel();
+        this.renderer.updateSidePanel(this.score, this.level, this.linesLeft);;
         this.spawnPiece();
       }
     }

@@ -11,7 +11,7 @@ export class Board {
   }
 
   addScene(scene) {
-    this.scene = scene; // Добавляем ссылку на сцену
+    this.scene = scene; 
     this.scene.add(this.fixedGroup);
   }
 
@@ -40,8 +40,8 @@ export class Board {
 
   setCurrentPiece(piece) {
     this.currentPiece = piece;
-    this.currentPiece.x = Math.floor(this.boardWidth / 2) - 1; // Центрируем
-    this.currentPiece.y = this.boardHeight - 1; // Стартовая позиция сверху
+    this.currentPiece.x = Math.floor(this.boardWidth / 2) - 1; 
+    this.currentPiece.y = this.boardHeight - 1; 
   }
 
   isValidSpawn(piece) {
@@ -120,8 +120,6 @@ export class Board {
     const width = matrix[0].length;
 
     const newShape = [];
-
-    // Поворот по часовой стрелке
     for (let col = 0; col < width; col++) {
         newShape[col] = [];
         for (let row = 0; row < height; row++) {
@@ -138,7 +136,6 @@ export class Board {
 }
 
   fixCurrentPiece(piece, game) {
-    // Создаем группу для фиксированных блоков, если её нет
     if (!this.fixedGroup) {
       this.fixedGroup = new THREE.Group();
       this.scene.add(this.fixedGroup);
@@ -215,6 +212,8 @@ export class Board {
     }
     game.setLinesLeft(game.getLinesLeft() - count);
     game.setScore(game.getScore() + this.countScore(count));
+    let sound = game.getSoundManager();
+    if (count != 0) sound.playClearLine();
   }
 
   clearBoard() {

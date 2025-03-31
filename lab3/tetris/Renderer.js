@@ -7,12 +7,12 @@ export class Renderer {
         this.scene = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.domElement.style.display = 'block'; // Убирает лишние отступы
+        this.renderer.domElement.style.display = 'block'; 
         this.renderer.domElement.style.width = '100vw';
         this.renderer.domElement.style.height = '100vh';
         this.renderer.setClearColor(0x000000, 0);
         document.body.appendChild(this.renderer.domElement);
-        this.pieceGroup = new THREE.Group(); // Добавьте эту строку
+        this.pieceGroup = new THREE.Group();
         this.scene.add(this.pieceGroup);
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(board.boardWidth / 2, board.boardHeight / 2, board.boardHeight * 1.8);
@@ -79,9 +79,9 @@ export class Renderer {
     togglePauseMessage(game) {
         const pauseMessage = document.getElementById('pauseMessage');
         if (game.status == "Pause") {
-            pauseMessage.style.display = 'block'; // Show the message
+            pauseMessage.style.display = 'block'; 
         } else {
-            pauseMessage.style.display = 'none'; // Hide the message
+            pauseMessage.style.display = 'none'; 
         }
     }
 
@@ -89,9 +89,9 @@ export class Renderer {
         console.log(game.getStatus());
         const pauseMessage = document.getElementById('levelUp');
         if (game.status == "LevelUp") {
-            pauseMessage.style.display = 'block'; // Show the message
+            pauseMessage.style.display = 'block'; 
         } else {
-            pauseMessage.style.display = 'none'; // Hide the message
+            pauseMessage.style.display = 'none'; 
         }
     }
 
@@ -99,9 +99,9 @@ export class Renderer {
         const pauseMessage = document.getElementById('Start');
         console.log(game.status);
         if (game.status == "Start") {
-            pauseMessage.style.display = 'block'; // Show the message
+            pauseMessage.style.display = 'block'; 
         } else {
-            pauseMessage.style.display = 'none'; // Hide the message
+            pauseMessage.style.display = 'none'; 
         }
     }
 
@@ -109,11 +109,9 @@ export class Renderer {
         const nextPieceContainer = document.getElementById('nextPiece');
         nextPieceContainer.innerHTML = '';
         
-        // Определяем размеры фигуры
         const width = nextPiece.matrix[0].length;
         const height = nextPiece.matrix.length;
         
-        // Создаем контейнер для превью
         const previewGrid = document.createElement('div');
         previewGrid.style.display = 'grid';
         previewGrid.style.gridTemplateColumns = `repeat(${width}, 20px)`;
@@ -121,13 +119,11 @@ export class Renderer {
         previewGrid.style.gap = '2px';
         previewGrid.style.marginTop = '10px';
     
-        // Отображаем фигуру в том же виде, как она будет спавниться
         for (let row = 0; row < height; row++) {
             for (let col = 0; col < width; col++) {
                 const cell = document.createElement('div');
                 cell.style.width = '20px';
                 cell.style.height = '20px';
-                // Отображаем снизу вверх (как в игре)
                 const displayRow = height - 1 - row;
                 cell.style.backgroundColor = nextPiece.matrix[displayRow][col] 
                     ? `#${nextPiece.color.toString(16).padStart(6, '0')}` 
@@ -240,7 +236,7 @@ export class Renderer {
         gameOverMessage.style.fontSize = '48px';
         gameOverMessage.style.color = 'red';
         gameOverMessage.style.fontWeight = 'bold';
-        gameOverMessage.style.display = 'none'; // Показываем сообщение
+        gameOverMessage.style.display = 'none';
         gameOverMessage.innerHTML = 'GAME OVER';
         document.body.appendChild(gameOverMessage);
     }
@@ -270,9 +266,9 @@ export class Renderer {
         const gameOverMessage = document.getElementById('GameOver');
         console.log(game.status);
         if (game.status == "GameOver") {
-            gameOverMessage.style.display = 'block'; // Show the message
+            gameOverMessage.style.display = 'block'; 
         } else {
-            gameOverMessage.style.display = 'none'; // Hide the message
+            gameOverMessage.style.display = 'none'; 
         }
     }
 

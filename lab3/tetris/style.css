@@ -2,10 +2,10 @@ body, html {
     margin: 0;
     padding: 0;
     overflow: hidden; 
-    background-size: cover; /* Заполняет весь экран */
-    background-position: center; /* Центрирует изображение */
+    background-size: cover; 
+    background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed; /* Фиксирует фон */
-    background-color: #222; /* Фолбэк цвет */
+    background-attachment: fixed; 
+    background-color: #222; 
 }
 
