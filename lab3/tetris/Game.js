@@ -22,6 +22,7 @@ export default class Game {
     window.addEventListener('keydown', (e) => this.onKeyDown(e));
     window.addEventListener('resize', () => this.onWindowResize());
     this.animate();
+
   }
 
   setStatus(newStatus) {
@@ -60,6 +61,10 @@ export default class Game {
     else {
       this.linesLeft = newLinesLeft;
     }
+  }
+
+  playMusic() {
+    this.soundManager.playMain();
   }
 
   getSoundManager() {
@@ -172,6 +177,7 @@ export default class Game {
           this.renderer.toggleGameOverMessage(this);
           this.animate();
         } else if (this.status == "Start") {
+          this.playMusic();
           this.isPaused = !this.isPaused;
           this.status = "OnGoing";
           this.restartGame();
