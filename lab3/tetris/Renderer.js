@@ -1,14 +1,16 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
 
 export class Renderer {
-    constructor(board, game) {
+    constructor(blockSize, boardHeight, board, game) {
         this.board = board;
+        this.blockSize = blockSize;
         this.scene = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0xffffff);
         document.body.appendChild(this.renderer.domElement);
-
+        this.pieceGroup = new THREE.Group(); // Добавьте эту строку
+        this.scene.add(this.pieceGroup);
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(board.boardWidth / 2, board.boardHeight / 2, board.boardHeight * 1.8);
         this.camera.lookAt(new THREE.Vector3(board.boardWidth / 2, board.boardHeight / 2, 0));
@@ -25,6 +27,35 @@ export class Renderer {
         this.createSidePanel(game);
 
     }
+
+    addPiece(piece) {
+        this.pieceGroup.clear();
+        
+        for (let row = 0; row < piece.matrix.length; row++) {
+          for (let col = 0; col < piece.matrix[row].length; col++) {
+            if (piece.matrix[row][col]) {
+              const block = this.createBlock(piece.color);
+              block.position.set(
+                (piece.x + col + 0.5) * this.blockSize,
+                (piece.y + row + 0.5) * this.blockSize,
+                0
+              );
+              this.pieceGroup.add(block);
+            }
+          }
+        }
+      }
+
+    createBlock(color) {
+        const geometry = new THREE.BoxGeometry(this.blockSize, this.blockSize, this.blockSize);
+        const material = new THREE.MeshPhongMaterial({ color: color });
+        const cube = new THREE.Mesh(geometry, material);
+        const edges = new THREE.EdgesGeometry(geometry);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const wireframe = new THREE.LineSegments(edges, lineMaterial);
+        cube.add(wireframe);
+        return cube;
+      }
 
     drawBoard() {
         const board = this.board.drawBoard();
@@ -61,6 +92,7 @@ export class Renderer {
 
     toggleStartMessage(game) {
         const pauseMessage = document.getElementById('Start');
+        console.log(game.status);
         if (game.status == "Start") {
             pauseMessage.style.display = 'block'; // Show the message
         } else {
@@ -99,7 +131,7 @@ export class Renderer {
         pauseMessage.style.fontSize = '48px';
         pauseMessage.style.color = 'black';
         pauseMessage.style.fontWeight = 'bold';
-        pauseMessage.style.display = 'none'; // Initially hidden
+        pauseMessage.style.display = 'none'; 
         pauseMessage.innerHTML = 'PAUSED';
         document.body.appendChild(pauseMessage);
     }
@@ -114,7 +146,7 @@ export class Renderer {
         levelUpmessage.style.fontSize = '48px';
         levelUpmessage.style.color = 'black';
         levelUpmessage.style.fontWeight = 'bold';
-        levelUpmessage.style.display = 'none'; // Initially hidden
+        levelUpmessage.style.display = 'none'; 
         levelUpmessage.innerHTML = 'Уровень пройден.';
         document.body.appendChild(levelUpmessage);
     }
@@ -129,7 +161,7 @@ export class Renderer {
         startMessage.style.fontSize = '48px';
         startMessage.style.color = 'black';
         startMessage.style.fontWeight = 'bold';
-        startMessage.style.display = 'none'; // Initially hidden
+        startMessage.style.display = 'none'; 
         startMessage.innerHTML = 'Press P for start game.';
         document.body.appendChild(startMessage);
     }
@@ -172,23 +204,20 @@ export class Renderer {
         document.body.appendChild(gameOverMessage);
     }
 
-    updateSidePanel() {
-        console.log("Линия очищена");
+    updateSidePanel(level, score, linesLeft) {
         const levelElement = document.getElementById('level');
         const scoreElement = document.getElementById('score');
         const linesLeftElement = document.getElementById('linesLeft');
         const nextPieceElement = document.getElementById('nextPiece');
 
-        if (levelElement) levelElement.textContent = this.level;
-        if (scoreElement) scoreElement.textContent = this.score;
-        if (linesLeftElement) linesLeftElement.textContent = this.linesLeft;
+        if (levelElement) levelElement.textContent = level;
+        if (scoreElement) scoreElement.textContent = score;
+        if (linesLeftElement) linesLeftElement.textContent = linesLeft;
     }
 
-    updatePiecePosition() {
+    updatePiecePosition(currentPiece) {
         let index = 0;
-        const matrix = this.currentPiece.shape;
-        const height = matrix.length;  
-        const width = matrix[0].length; 
+        const matrix = currentPiece.matrix;
 
         for (let row = 0; row < matrix.length; row++) {
             for (let col = 0; col < matrix[row].length; col++) {
@@ -197,8 +226,8 @@ export class Renderer {
 
                     if (block instanceof THREE.Object3D) {
                         block.position.set(
-                            (this.currentPiece.x + col + 0.5) * this.blockSize,
-                            (this.currentPiece.y + row + 0.5) * this.blockSize,
+                            (currentPiece.x + col + 0.5) * this.blockSize,
+                            (currentPiece.y + row + 0.5) * this.blockSize,
                             0
                         );
                     } else {
