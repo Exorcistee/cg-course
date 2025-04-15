@@ -1,4 +1,4 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js';
 
 export function createOrUpdateCamera(camera, xMin, xMax, yMin, yMax, width, height) {
   const aspect = width / height;
