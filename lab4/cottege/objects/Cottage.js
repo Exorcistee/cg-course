@@ -2,27 +2,26 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.m
 
 export class Cottage {
     constructor() {
-        this.width = 6;
-        this.depth = 5;
-        this.height = 4;
+        this.width = 20;
+        this.depth = 7;
+        this.height = 5;
         this.createMesh();
     }
 
     createMesh() {
         const textureLoader = new THREE.TextureLoader();
-        const brickTexture = textureLoader.load('https://threejs.org/examples/textures/brick/brick_diffuse.jpg');
+        const brickTexture = textureLoader.load('../textures/red_brick.jpg');
         brickTexture.wrapS = brickTexture.wrapT = THREE.RepeatWrapping;
         brickTexture.repeat.set(2, 1);
 
-        const roofTexture = textureLoader.load('https://threejs.org/examples/textures/roof/roof.jpg');
+        const roofTexture = textureLoader.load('../textures/white_brick.png');
         roofTexture.wrapS = roofTexture.wrapT = THREE.RepeatWrapping;
-        roofTexture.repeat.set(1, 1);
+        roofTexture.repeat.set(10, 1);
 
-        const windowTexture = textureLoader.load('https://threejs.org/examples/textures/glass/glass.png');
+        const windowTexture = textureLoader.load('');
         windowTexture.transparent = true;
 
         const cottageGroup = new THREE.Group();
-
 
         const wallsGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
         const wallsMaterial = new THREE.MeshStandardMaterial({ 
@@ -34,8 +33,7 @@ export class Cottage {
         walls.castShadow = true;
         walls.receiveShadow = true;
         cottageGroup.add(walls);
-
-        const roofGeometry = new THREE.ConeGeometry(this.width * 1.2, 2, 4);
+        const roofGeometry = new THREE.ConeGeometry(this.width / 2, 4, 4);
         const roofMaterial = new THREE.MeshStandardMaterial({ 
             map: roofTexture,
             roughness: 0.7

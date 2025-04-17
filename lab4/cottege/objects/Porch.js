@@ -1,4 +1,4 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js';
 
 export class Porch {
     constructor() {
@@ -10,7 +10,7 @@ export class Porch {
 
     createMesh() {
         const textureLoader = new THREE.TextureLoader();
-        const woodTexture = textureLoader.load('https://threejs.org/examples/textures/wood/wood.jpg');
+        const woodTexture = textureLoader.load('');
         woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
         woodTexture.repeat.set(1, 1);
 
