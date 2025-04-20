@@ -9,7 +9,7 @@ export class Fence {
 
     createMesh() {
         const textureLoader = new THREE.TextureLoader();
-        const woodTexture = textureLoader.load('');
+        const woodTexture = textureLoader.load('./textures/wood.jpg');
         woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
         woodTexture.repeat.set(0.5, 0.5);
 

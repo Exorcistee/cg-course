@@ -10,7 +10,7 @@ export class Porch {
 
     createMesh() {
         const textureLoader = new THREE.TextureLoader();
-        const woodTexture = textureLoader.load('');
+        const woodTexture = textureLoader.load('./textures/wood.jpg');
         woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
         woodTexture.repeat.set(1, 1);
 

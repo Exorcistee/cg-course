@@ -9,7 +9,7 @@ export class Ground {
 
     createMesh() {
         const textureLoader = new THREE.TextureLoader();
-        const grassTexture = textureLoader.load('../textures/grass.jpg');
+        const grassTexture = textureLoader.load('./textures/grass.jpg');
         grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
         grassTexture.repeat.set(this.width / 2, this.depth / 2);
 

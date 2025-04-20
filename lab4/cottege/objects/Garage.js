@@ -13,11 +13,11 @@ export class Garage {
 
         // Загрузка текстур с обработкой ошибок
         const textureLoader = new THREE.TextureLoader();
-        const brickTexture = textureLoader.load('../textures/red_brick.jpg');
+        const brickTexture = textureLoader.load('./textures/red_brick.jpg');
         brickTexture.wrapS = brickTexture.wrapT = THREE.RepeatWrapping;
         brickTexture.repeat.set(2, 1);
 
-        const roofTexture = textureLoader.load('../textures/white_brick.png');
+        const roofTexture = textureLoader.load('./textures/white_brick.png');
         roofTexture.wrapS = roofTexture.wrapT = THREE.RepeatWrapping;
         roofTexture.repeat.set(10, 1);
         const windowTexture = await this.loadTexture('https://threejs.org/examples/textures/glass.png');

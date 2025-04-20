@@ -1,7 +1,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js';
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/controls/OrbitControls.js';
 import { Cottage } from '../objects/Cottage.js';
-import { Garage } from '../objects/garage.js';
+import { Garage } from '../objects/Garage.js';
 import { Fence } from '../objects/Fence.js';
 import { Porch } from '../objects/Porch.js';
 import { Tree } from '../objects/Tree.js';
@@ -73,6 +73,11 @@ export class CottageScene {
 
         // Гараж, прилегающий к дому
         this.garage = new Garage();
+        this.garage.mesh.position.set(
+            this.cottage.width/2 + this.garage.width/2,  // X: справа от дома
+            0,                                           // Y: на том же уровне
+            -this.cottage.depth/2 + this.garage.depth/2  // Z: выравниваем по передней стенке
+        );
         this.scene.add(this.garage.mesh);
 
         // Забор по периметру
