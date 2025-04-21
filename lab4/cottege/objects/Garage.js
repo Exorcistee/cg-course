@@ -9,7 +9,7 @@ export class Garage {
         this.createMesh();
     }
 
-    async createMesh() {
+    createMesh() {
 
         // Загрузка текстур с обработкой ошибок
         const textureLoader = new THREE.TextureLoader();
@@ -20,7 +20,7 @@ export class Garage {
         const roofTexture = textureLoader.load('./textures/white_brick.png');
         roofTexture.wrapS = roofTexture.wrapT = THREE.RepeatWrapping;
         roofTexture.repeat.set(10, 1);
-        const windowTexture = await this.loadTexture('https://threejs.org/examples/textures/glass.png');
+        const windowTexture = textureLoader.load('./textures/white_brick.png');
         windowTexture.transparent = true;
 
         const garageGroup = new THREE.Group();
@@ -51,33 +51,36 @@ export class Garage {
     }
 
     createSlopedRoof(texture, group) {
-        const roofHeight = Math.tan(THREE.MathUtils.degToRad(this.roofPitch)) * (this.width/2);
-        
-        // Создаем форму односкатной крыши
+        const roofPeakHeight = 2; // Высота конька крыши (меньше чем у дома)
+        const overhang = 0.5;     // Свес крыши (умеренный)
+    
+        // 1. Форма крыши (треугольное сечение)
         const roofShape = new THREE.Shape();
-        roofShape.moveTo(-this.width/2, 0);
-        roofShape.lineTo(this.width/2, 0);
-        roofShape.lineTo(this.width/2, roofHeight);
-        roofShape.lineTo(-this.width/2, roofHeight);
-        
-        // Вытягиваем крышу по глубине гаража
-        const roofGeometry = new THREE.ExtrudeGeometry(roofShape, {
-            depth: this.depth,
+        roofShape.moveTo(-this.depth/2 - overhang, 0);  // Низ ската (свес)
+        roofShape.lineTo(0, roofPeakHeight);            // Конек крыши
+        roofShape.lineTo(this.depth/2 + overhang, 0);   // Низ ската (свес)
+        roofShape.lineTo(-this.depth/2 - overhang, 0);  // Замыкаем
+    
+        // 2. Выдавливаем по ШИРИНЕ гаража (this.width)
+        const extrudeSettings = {
+            depth: this.width + overhang * 2,  // Свесы по бокам
             bevelEnabled: false
-        });
-        
-        // Поворачиваем и позиционируем крышу
-        roofGeometry.rotateX(Math.PI/2);
+        };
+        const roofGeometry = new THREE.ExtrudeGeometry(roofShape, extrudeSettings);
         roofGeometry.rotateY(Math.PI/2);
-        roofGeometry.translate(0, this.height + roofHeight/2, 0);
-        
-        const roofMaterial = new THREE.MeshStandardMaterial({
-            map: texture,
-            roughness: 0.7,
-            side: THREE.DoubleSide
-        });
-        
-        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roofGeometry.translate(-this.width/2 - overhang, this.height, 0);
+        // 3. Создаем и настраиваем меш крыши
+        const roof = new THREE.Mesh(
+            roofGeometry,
+            new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.7,
+                side: THREE.DoubleSide
+            })
+        );
+    
+        // 4. Позиционирование и поворот
+    // Конек вдоль короткой стороны
         roof.castShadow = true;
         group.add(roof);
     }
@@ -95,7 +98,6 @@ export class Garage {
         door.castShadow = true;
         group.add(door);
         
-        // Добавляем ручки
         const handleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8);
         const handleMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
         

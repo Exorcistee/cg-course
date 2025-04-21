@@ -29,7 +29,7 @@ export class Fence {
         const spacing = 0.9;
 
 
-        const createFenceSection = (x, z, rotationY) => {
+        const createFenceSection = (x, z, rotationY, rotate) => {
             // Столбы
             const postGeometry = new THREE.BoxGeometry(postWidth, postHeight, postDepth);
             
@@ -56,29 +56,36 @@ export class Fence {
                     y,
                     z + railWidth / 2 * Math.cos(rotationY)
                 );
-                rail.rotation.y = rotationY;
                 rail.castShadow = true;
+                if (rotate == true) {
+                    rail.rotation.y = Math.PI / 2; 
+                }
+                else{
+                    rail.rotation.y = Math.PI; 
+                }
+
                 fenceGroup.add(rail);
+
             }
         };
 
 
         for (let z = -this.depth / 2; z < this.depth / 2; z += spacing) {
-            createFenceSection(-this.width / 2, z, 0);
+            createFenceSection(-this.width / 2, z, 0, true);
         }
 
 
         for (let x = -this.width / 2; x < this.width / 2; x += spacing) {
-            createFenceSection(x, this.depth / 2, Math.PI / 2);
+            createFenceSection(x, this.depth / 2, Math.PI / 2, false);
         }
 
 
         for (let z = this.depth / 2; z > -this.depth / 2; z -= spacing) {
-            createFenceSection(this.width / 2, z, Math.PI);
+            createFenceSection(this.width / 2, z, Math.PI, true);
         }
 
         for (let x = this.width / 2; x > -this.width / 2; x -= spacing) {
-            createFenceSection(x, -this.depth / 2, -Math.PI / 2);
+            createFenceSection(x, -this.depth / 2, -Math.PI / 2, false);
         }
 
         this.mesh = fenceGroup;

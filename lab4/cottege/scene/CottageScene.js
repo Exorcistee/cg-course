@@ -19,13 +19,15 @@ export class CottageScene {
         this.initControls();
         this.createObjects();
         this.animate();
+        this.createNightSky();
         this.createLights();
+        this.createMoon();
     }
 
     initScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87CEEB);
-        
+        this.scene.background = new THREE.Color(0x0a0a1a); // Темно-синий фон
+        this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(15, 15, 20);
         
@@ -34,10 +36,10 @@ export class CottageScene {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.2;
+        this.renderer.toneMappingExposure = 0.8; // Уменьшаем экспозицию для ночи
         document.body.appendChild(this.renderer.domElement);
         
-        this.setupLighting();
+        this.setupNightLighting();
     }
 
     initControls() {
@@ -49,16 +51,53 @@ export class CottageScene {
         this.controls.maxDistance = 50;
     }
 
-    setupLighting() {
-        const sunlight = new THREE.DirectionalLight(0xffffff, 1);
-        sunlight.position.set(15, 25, 15);
-        sunlight.castShadow = true;
-        sunlight.shadow.mapSize.width = 2048;
-        sunlight.shadow.mapSize.height = 2048;
-        this.scene.add(sunlight);
-
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    setupNightLighting() {
+        const moonlight = new THREE.DirectionalLight(0xc2d1ff, 0.5);
+        moonlight.position.set(-15, 25, -15); // Источник света сбоку
+        moonlight.castShadow = true;
+        
+        // Увеличиваем размер карты теней
+        moonlight.shadow.mapSize.width = 4096;
+        moonlight.shadow.mapSize.height = 4096;
+        
+        // Настраиваем камеру теней
+        moonlight.shadow.camera.near = 0.5;
+        moonlight.shadow.camera.far = 100;
+        moonlight.shadow.camera.left = -30;
+        moonlight.shadow.camera.right = 30;
+        moonlight.shadow.camera.top = 30;
+        moonlight.shadow.camera.bottom = -30;
+        
+        this.scene.add(moonlight);
+    
+        // Добавляем слабый заполняющий свет
+        const ambientLight = new THREE.AmbientLight(0x404080, 0.1);
         this.scene.add(ambientLight);
+        
+        // Сохраняем ссылку на свет для анимации
+        this.moonlight = moonlight;
+    }
+
+    createNightSky() {
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 1,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const starVertices = [];
+        for (let i = 0; i < 10000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starVertices.push(x, y, z);
+        }
+
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        this.scene.add(stars);
     }
 
     createObjects() {
@@ -96,11 +135,11 @@ export class CottageScene {
     createLights() {
 
         const lightPositions = [
-            [-8, 0, -10],
-            [8, 0, -10],
-            [-12, 0, 5],
-            [12, 0, 5],
-            [0, 0, 15]
+            [0, 0, 0],
+            [0, 0, 0],
+            [-15, 0, 5],
+            [15, 0, 5],
+            [0, 0, 0]
         ];
 
         this.streetLights = [];
@@ -111,20 +150,41 @@ export class CottageScene {
             light.getLight().position.set(pos[0], light.height - 0.8, pos[2]);
             light.getLight().shadow.mapSize.width = 512;
             light.getLight().shadow.mapSize.height = 512;
-            light.getLight().distance = 15;    
+            light.getLight().distance = 15;
+            light.getLight().intensity = 1.5; // Увеличиваем интенсивность для ночи
+            light.getLight().color.setHex(0xffeedd); // Теплый свет фонарей
+            
             this.scene.add(light.mesh);
             this.scene.add(light.getLight());
-            
             this.streetLights.push(light);
         });
+    }
+
+    createMoon() {
+        // Создаем луну
+        const moonGeometry = new THREE.SphereGeometry(3, 32, 32);
+        const moonMaterial = new THREE.MeshBasicMaterial({
+            color: 0xf0f0ff,
+            emissive: 0x8888ff,
+            emissiveIntensity: 0.2
+        });
+        
+        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+        moon.position.set(-30, 30, -50);
+        this.scene.add(moon);
+
+        // Добавляем свечение луны
+        const moonLight = new THREE.PointLight(0xc2d1ff, 0.5, 100);
+        moonLight.position.set(-30, 30, -50);
+        this.scene.add(moonLight);
     }
 
     addTrees() {
         const treePositions = [
             [-15, 0, -15],
-            [15, 0, 15],
-            [18, 0, -10],
-            [-18, 0, 10]
+            [-15, 0, 15],
+            [15, 0, -15],
+            [15, 0, 15]
         ];
         
         treePositions.forEach(pos => {
@@ -142,6 +202,16 @@ export class CottageScene {
 
     animate = () => {
         requestAnimationFrame(this.animate);
+        if (this.stars) {
+            const positions = this.stars.geometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                if (Math.random() < 0.001) {
+                    positions[i + 1] = (Math.random() - 0.5) * 20000;
+                }
+            }
+            this.stars.geometry.attributes.position.needsUpdate = true;
+        }
+        
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
