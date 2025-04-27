@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Trainer 3D</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="info">Memory Trainer 3D - Откройте все парные карточки!</div>
+    <div id="start-screen">
+        <h1>Memory Trainer 3D</h1>
+        <p>Выберите сложность:</p>
+        <select id="difficulty">
+            <option value="4">Легкий (4x4)</option>
+            <option value="6" selected>Средний (6x6)</option>
+            <option value="8">Сложный (8x8)</option>
+        </select>
+        <button id="start-btn">Начать игру</button>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script type="module" src="main.js"></script>
+
+</body>
+</html>

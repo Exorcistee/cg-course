@@ -1,5 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js';
-import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import { Cottage } from '../objects/Cottage.js';
 import { Garage } from '../objects/Garage.js';
 import { Fence } from '../objects/Fence.js';
@@ -135,11 +135,8 @@ export class CottageScene {
     createLights() {
 
         const lightPositions = [
-            [0, 0, 0],
-            [0, 0, 0],
             [-15, 0, 5],
             [15, 0, 5],
-            [0, 0, 0]
         ];
 
         this.streetLights = [];
