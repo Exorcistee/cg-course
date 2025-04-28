@@ -11,14 +11,12 @@ export class TextureManager {
                 (texture) => {
                     textures[path] = texture;
                     loaded++;
-                    onProgress(Math.round((loaded / total) * 100));
                     if (loaded === total) onComplete(textures);
                 },
                 undefined,
                 (error) => {
                     console.error('Error loading texture:', path, error);
                     loaded++;
-                    onProgress(Math.round((loaded / total) * 100));
                     if (loaded === total) onComplete(textures);
                 }
             );
@@ -49,36 +47,6 @@ export class TextureManager {
         
         ctx.fillStyle = '#4a6ea9';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 20;
-        ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 80px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('?', canvas.width / 2, canvas.height / 2);
-        
-        return new THREE.CanvasTexture(canvas);
-    }
-
-    static createHighlightTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        const gradient = ctx.createRadialGradient(
-            128, 128, 0,
-            128, 128, 128
-        );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.2)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 256, 256);
         
         return new THREE.CanvasTexture(canvas);
     }

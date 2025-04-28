@@ -75,42 +75,9 @@ export class Game {
         const pairs = [];
         for (let i = 1; i <= this.totalPairs; i++) {
             pairs.push(i, i); 
+            console.log(i);
         }
         return this.shuffleArray(pairs);
-    }
-
-    onMouseMove(event) {
-        this.prevMousePosition.set(
-            (event.clientX / window.innerWidth) * 2 - 1,
-            -(event.clientY / window.innerHeight) * 2 + 1
-        );
-    
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(this.prevMousePosition, this.camera);
-        
-        if (!this.cards || this.cards.length === 0) return;
-        const intersects = raycaster.intersectObjects(this.cards.map(c => c.mesh));
-    
-        if (this.hoveredCard && this.hoveredCard.highlightMesh) {
-            this.hoveredCard.updateHighlight(0);
-            this.hoveredCard = null;
-        }
-    
-        if (intersects.length > 0 && intersects[0].object) {
-            const card = this.cards.find(c => c.mesh === intersects[0].object);
-            if (card && !card.isFlipped && !card.isMatched && card.highlightMesh) {
-                this.hoveredCard = card;
-                
-                if (intersects[0].uv) {
-                    const uv = intersects[0].uv;
-                    card.highlightMesh.position.x = (uv.x - 0.5) * card.width * 0.8;
-                    card.highlightMesh.position.y = -(uv.y - 0.5) * card.height * 0.8;
-                }
-                card.updateHighlight(1);
-                this.scene.add(card.highlightMesh);
-            }
-        }
-
     }
 
     setupScene() {
@@ -118,8 +85,8 @@ export class Game {
         this.scene.background = new THREE.Color(0x333333);
         
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, -5, 10); 
-        this.camera.lookAt(0, 0, 0); 
+        this.camera.position.set(0, -6, 15); 
+        this.camera.lookAt(0, 0, 0);
         
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -129,9 +96,10 @@ export class Game {
         this.scene.add(ambientLight);
         
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(1, 1, 1);
+        directionalLight.position.set(0, 0, 1);
         this.scene.add(directionalLight);
-        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        
+        // window.addEventListener('mousemove', this.onMouseMove.bind(this));
     }
 
     createBoard() {
@@ -139,7 +107,7 @@ export class Game {
         const cardWidth = 1;
         const cardHeight = 1.5;
         const cardDepth = 0.3;
-        const gap = 0.1;
+        const gap = 0.3;
         
         const startX = -((this.cols * (cardWidth + gap)) / 2 + (cardWidth + gap) / 2);
         const startY = ((this.rows * (cardHeight + gap)) / 2 - (cardHeight + gap) / 2);
@@ -184,6 +152,16 @@ export class Game {
                 this.scene.add(card.highlightMesh);
             }
         }
+        
+        const totalWidth = this.cols * (cardWidth + gap) + gap;
+        const totalHeight = this.rows * (cardHeight + gap) + gap;
+        const centerX = totalWidth / 2.5;
+        const centerY = totalHeight / 2;
+        
+        this.cards.forEach(card => {
+            card.mesh.position.x -= startX + centerX;
+            card.mesh.position.y -= startY - centerY;
+        });
 
     }
 
@@ -351,19 +329,8 @@ export class Game {
 
     endGame() {
         this.renderer.domElement.remove();
-        
-        const endMessage = document.createElement('div');
-        endMessage.id = 'end-message';
-        endMessage.innerHTML = `
-            <h2>Победа! Ваш счет: ${this.score}</h2>
-            <button id="return-btn">Вернуться в меню</button>
-        `;
-        document.body.appendChild(endMessage);
-        
-        document.getElementById('return-btn').addEventListener('click', () => {
-            document.body.removeChild(endMessage);
-            document.getElementById('start-screen').style.display = 'block';
-        });
+
+        document.getElementById('start-screen').style.display = 'block';
         
         this.dispose();
     }

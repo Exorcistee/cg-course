@@ -11,54 +11,24 @@ export class Card {
         this.isFlipped = false;
         this.isMatched = false;
         this.mesh = this.createMesh();
-        this.highlightMesh = null;
-        try {
-            this.highlightMesh = this.createHighlightMesh();
-            this.highlightMesh.visible = false; 
-            this.mesh.add(this.highlightMesh);
-        } catch (e) {
-            console.error('Error creating highlight mesh:', e);
-        }
-        
-        this.highlightIntensity = 0;
+
     }
     
     createMesh() {
         const geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
         
         const materials = [
-            new THREE.MeshStandardMaterial({ color: 0x888888, transparent: true  }), 
-            new THREE.MeshStandardMaterial({ color: 0x888888, transparent: true  }), 
-            new THREE.MeshStandardMaterial({ color: 0x888888, transparent: true  }), 
-            new THREE.MeshStandardMaterial({ color: 0x888888, transparent: true  }), 
-            new THREE.MeshStandardMaterial({ map: this.frontTexture, transparent: true  }), 
-            new THREE.MeshStandardMaterial({ map: this.backTexture, transparent: true  }) 
+            new THREE.MeshStandardMaterial({ color: 0x888888 }),
+            new THREE.MeshStandardMaterial({ color: 0x888888 }), 
+            new THREE.MeshStandardMaterial({ color: 0x888888 }), 
+            new THREE.MeshStandardMaterial({ color: 0x888888 }),
+            new THREE.MeshStandardMaterial({ map: this.frontTexture }), 
+            new THREE.MeshStandardMaterial({ map: this.backTexture }) 
         ];
         
         const mesh = new THREE.Mesh(geometry, materials);
         mesh.rotation.y = 0;
         return mesh;
-    }
-
-    createHighlightMesh() {
-        const geometry = new THREE.PlaneGeometry(this.width * 1.1, this.height * 1.1);
-        const material = new THREE.MeshBasicMaterial({
-            map: TextureManager.createHighlightTexture(),
-            transparent: true,
-            opacity: 0,
-            blending: THREE.AdditiveBlending
-        });
-        
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.rotation.x = Math.PI / 2; 
-        mesh.position.z = 0.06;
-        
-        return mesh;
-    }
-
-    updateHighlight(intensity) {
-        this.highlightIntensity = intensity;
-        this.highlightMesh.material.opacity = intensity * 0.6;
     }
 
     showFront() {
