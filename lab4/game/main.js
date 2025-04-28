@@ -1,6 +1,10 @@
 import { Game } from "./objects/Game.js";
 
-document.addEventListener('DOMContentLoaded', () => {
-    const gameContainer = document.body; // или document.getElementById('game-container')
-    const game = new Game(gameContainer);
-});
+const difficulty = parseInt(document.getElementById('difficulty').value);
+const rows = difficulty;
+const cols = difficulty;
+const totalPairs = (rows * cols) / 2;
+
+const gameContainer = document.body; 
+const game = new Game(gameContainer, totalPairs);
+
