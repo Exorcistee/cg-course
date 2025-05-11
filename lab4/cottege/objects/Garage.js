@@ -2,16 +2,15 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.m
 
 export class Garage {
     constructor() {
-        this.width = 6;  // Увеличим размеры для реалистичности
+        this.width = 6; 
         this.depth = 5;
         this.height = 3;
-        this.roofPitch = 30; // Угол наклона крыши в градусах
+        this.roofPitch = 30;
         this.createMesh();
     }
 
     createMesh() {
 
-        // Загрузка текстур с обработкой ошибок
         const textureLoader = new THREE.TextureLoader();
         const brickTexture = textureLoader.load('./textures/red_brick.jpg');
         brickTexture.wrapS = brickTexture.wrapT = THREE.RepeatWrapping;
@@ -32,8 +31,8 @@ export class Garage {
         this.createGarageDoor(garageGroup);
 
         const window = this.createWindowWithFrame(
-            new THREE.Vector3(this.width/2 + 0.05, 1.8, 0), // Позиция
-            Math.PI/2 // Поворот на 90 градусов
+            new THREE.Vector3(this.width/2 + 0.05, 1.8, 0), 
+            Math.PI/2 
         );
         garageGroup.add(window);
 
@@ -55,25 +54,22 @@ export class Garage {
     }
 
     createSlopedRoof(texture, group) {
-        const roofPeakHeight = 2; // Высота конька крыши (меньше чем у дома)
-        const overhang = 0.5;     // Свес крыши (умеренный)
+        const roofPeakHeight = 2;
+        const overhang = 0.5;  
     
-        // 1. Форма крыши (треугольное сечение)
         const roofShape = new THREE.Shape();
-        roofShape.moveTo(-this.depth/2 - overhang, 0);  // Низ ската (свес)
-        roofShape.lineTo(0, roofPeakHeight);            // Конек крыши
-        roofShape.lineTo(this.depth/2 + overhang, 0);   // Низ ската (свес)
-        roofShape.lineTo(-this.depth/2 - overhang, 0);  // Замыкаем
+        roofShape.moveTo(-this.depth/2 - overhang, 0); 
+        roofShape.lineTo(0, roofPeakHeight);          
+        roofShape.lineTo(this.depth/2 + overhang, 0); 
+        roofShape.lineTo(-this.depth/2 - overhang, 0); 
     
-        // 2. Выдавливаем по ШИРИНЕ гаража (this.width)
         const extrudeSettings = {
-            depth: this.width + overhang * 2,  // Свесы по бокам
+            depth: this.width + overhang * 2, 
             bevelEnabled: false
         };
         const roofGeometry = new THREE.ExtrudeGeometry(roofShape, extrudeSettings);
         roofGeometry.rotateY(Math.PI/2);
         roofGeometry.translate(-this.width/2 - overhang, this.height, 0);
-        // 3. Создаем и настраиваем меш крыши
         const roof = new THREE.Mesh(
             roofGeometry,
             new THREE.MeshStandardMaterial({
@@ -83,8 +79,6 @@ export class Garage {
             })
         );
     
-        // 4. Позиционирование и поворот
-    // Конек вдоль короткой стороны
         roof.castShadow = true;
         group.add(roof);
     }
@@ -124,7 +118,6 @@ export class Garage {
         const frameWidth = 0.1;
         const glassThickness = 0.02;
 
-        // Материалы
         const frameMaterial = new THREE.MeshStandardMaterial({
             color: 0x3a3632,
             roughness: 0.7
@@ -139,12 +132,10 @@ export class Garage {
             opacity: 0.8
         });
 
-        // Рама окна
         const frameGeometry = new THREE.BoxGeometry(width + frameWidth*2, height + frameWidth*2, 0.1);
         const frame = new THREE.Mesh(frameGeometry, frameMaterial);
         windowGroup.add(frame);
 
-        // Вертикальные элементы рамы
         const verticalFrameGeometry = new THREE.BoxGeometry(frameWidth, height, 0.1);
         for (let i = -1; i <= 1; i += 2) {
             const verticalFrame = new THREE.Mesh(verticalFrameGeometry, frameMaterial);
@@ -152,7 +143,6 @@ export class Garage {
             windowGroup.add(verticalFrame);
         }
 
-        // Горизонтальные элементы рамы
         const horizontalFrameGeometry = new THREE.BoxGeometry(width, frameWidth, 0.1);
         for (let i = -1; i <= 1; i += 2) {
             const horizontalFrame = new THREE.Mesh(horizontalFrameGeometry, frameMaterial);
@@ -160,13 +150,11 @@ export class Garage {
             windowGroup.add(horizontalFrame);
         }
 
-        // Стекло
         const glassGeometry = new THREE.BoxGeometry(width - frameWidth*0.5, height - frameWidth*0.5, glassThickness);
         const glass = new THREE.Mesh(glassGeometry, glassMaterial);
         glass.position.z = 0.06;
         windowGroup.add(glass);
 
-        // Позиционирование
         windowGroup.position.set(position.x, position.y, position.z);
         windowGroup.rotation.y = rotationY;
         

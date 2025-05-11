@@ -2,10 +2,10 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.m
 
 export class Porch {
     constructor() {
-        this.width = 10;      // Ширина веранды (вдоль фасада)
-        this.depth = 6;       // Глубина веранды
-        this.height = 0.5;    // Высота основания
-        this.roofHeight = 3;  // Высота крыши от верха колонн
+        this.width = 10;     
+        this.depth = 6;   
+        this.height = 0.5; 
+        this.roofHeight = 3; 
         this.createMesh();
     }
 
@@ -17,7 +17,6 @@ export class Porch {
 
         const porchGroup = new THREE.Group();
 
-        // Основание веранды (смещено на -2.5 по X)
         const baseGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
         const baseMaterial = new THREE.MeshStandardMaterial({ 
             map: woodTexture,
@@ -28,14 +27,12 @@ export class Porch {
         base.receiveShadow = true;
         porchGroup.add(base);
 
-        // Колонны (4 угловые колонны)
         const columnGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
         const columnMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x8B4513,
             roughness: 0.5
         });
 
-        // Позиции колонн с учетом смещения основания
         const columnsPositions = [
             [-this.width/2 + 0.3 - 2.5, 1.8, this.depth/2 - 0.3],  // Левая передняя
             [this.width/2 - 0.3 - 2.5, 1.8, this.depth/2 - 0.3],   // Правая передняя
@@ -50,33 +47,28 @@ export class Porch {
             porchGroup.add(column);
         });
 
-        // Односкатная крыша
-        const roofOverhang = 2.0; // Свес по бокам веранды
-        const roofSlopeHeight = 1.2; // Высота ската
+        const roofOverhang = 2.0; 
+        const roofSlopeHeight = 1.2; 
         
-        // 1. Форма крыши (правильный скат ОТ дома)
         const roofShape = new THREE.Shape();
-        roofShape.moveTo(-this.depth/4, 0);  // Ближний к дому край (низкий)
-        roofShape.lineTo(this.depth/4 + roofOverhang, roofSlopeHeight); // Дальний от дома край (высокий)
-        roofShape.lineTo(this.depth/4 + roofOverhang, 0); // Дальний от дома край (низкий)
-        roofShape.lineTo(-this.depth/4, 0);  // Замыкаем
+        roofShape.moveTo(-this.depth/4, 0);  
+        roofShape.lineTo(this.depth/4 + roofOverhang, roofSlopeHeight); 
+        roofShape.lineTo(this.depth/4 + roofOverhang, 0);
+        roofShape.lineTo(-this.depth/4, 0);  
         
-        // 2. Выдавливаем по ширине веранды
         const roofGeometry = new THREE.ExtrudeGeometry(roofShape, {
-            depth: this.width, // Ширина + свесы
+            depth: this.width, 
             bevelEnabled: false
         });
         
-        // 3. Материал крыши
         const roof = new THREE.Mesh(roofGeometry, new THREE.MeshStandardMaterial({
             map: woodTexture,
             roughness: 0.6,
             side: THREE.DoubleSide
         }));
         
-        // 4. Позиционирование и поворот крыши
-        roof.position.set(-7.5, this.roofHeight, 2); // Центровка по X как у основания 
-        roof.rotation.y = Math.PI/2;  // Поворот на 90° вокруг Y
+        roof.position.set(-7.5, this.roofHeight, 2); 
+        roof.rotation.y = Math.PI/2; 
         roof.castShadow = true;
         porchGroup.add(roof);
         this.mesh = porchGroup;

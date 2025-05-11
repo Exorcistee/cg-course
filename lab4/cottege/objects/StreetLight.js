@@ -3,7 +3,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.m
 export class StreetLight {
     constructor() {
         this.height = 5;
-        this.lightIntensity = 1;
+        this.lightIntensity = 10;
         this.createLight();
         this.createPole();
     }
@@ -11,7 +11,6 @@ export class StreetLight {
     createPole() {
         const poleGroup = new THREE.Group();
 
-        // Металлический столб
         const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, this.height, 8);
         const poleMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x333333,
@@ -23,13 +22,11 @@ export class StreetLight {
         pole.castShadow = true;
         poleGroup.add(pole);
 
-        // Кронштейн
         const bracketGeometry = new THREE.BoxGeometry(1, 0.05, 0.05);
         const bracket = new THREE.Mesh(bracketGeometry, poleMaterial);
         bracket.position.set(0.5, this.height - 0.5, 0);
         poleGroup.add(bracket);
 
-        // Плафон фонаря
         const lampGeometry = new THREE.SphereGeometry(0.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
         const lampMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffcc,
@@ -47,13 +44,11 @@ export class StreetLight {
     }
 
     createLight() {
-        // Точечный свет фонаря
-        this.light = new THREE.PointLight(0xffeedd, this.lightIntensity, 10, 2);
+        this.light = new THREE.PointLight(0xffeedd, this.lightIntensity, 1, 2);
         this.light.position.set(0.5, this.height - 0.8, 0);
         this.light.castShadow = true;
         this.light.shadow.mapSize.width = 1024;
         this.light.shadow.mapSize.height = 1024;
-        this.light.shadow.bias = -0.001;
     }
 
     getLight() {

@@ -21,7 +21,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         canvas.height = this.height;   
                     }
                     context.clearRect(0, 0, canvas.width, canvas.height);
+                    if (file.type === 'image/png') {
+                        context.globalAlpha = 0.5; 
+                    } else {
+                        context.globalAlpha = 1; 
+                    }
                     context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    context.globalAlpha = 1; 
                 };
                 img.src = event.target.result;
             };
@@ -59,6 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const openButton = document.querySelector('#open-button');
     openButton.addEventListener('click', openImage);
     useDragAndDrop(canvas);
-
+    //Починить днд, Отрывается и таскание без клика
 });
 

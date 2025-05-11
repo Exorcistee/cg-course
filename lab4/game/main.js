@@ -9,5 +9,5 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
     const gameContainer = document.body; 
     const game = new Game(gameContainer, totalPairs);
-    game.init(rows, cols);
+
 });

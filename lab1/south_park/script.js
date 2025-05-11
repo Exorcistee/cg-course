@@ -1,22 +1,22 @@
 const y = 5;
-let lastX = {x : 0};
 
 window.onload = () => {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     context.translate(canvas.width / 2, canvas.height / 2);
-    drawHead(context);
+    draw(context);
     useDragAndDrop(canvas);
 }
 
-function drawHead(context)
+//TODO: избавиться от глобальных перменных, разделить функцию, устранить дублирование баллов
+function draw(context)
 {   
     ellipseX = 20;
     ellipseY = 17;
     radiusHead = 60;
 
     context.beginPath();
-    context.fillStyle="rgb(47, 0, 255)";
+    context.fillStyle="rgb(27, 1, 144)";
     context.arc(0, 0, radiusHead, getRadians(180), getRadians(360));
     context.fill();
 
@@ -41,16 +41,16 @@ function drawHead(context)
     context.fillRect(-radiusHead*2, -radiusHead, radiusHead, canvas.height);
 
     
-    context.fillStyle="rgb(47, 0, 255)";
+    context.fillStyle="rgb(27, 1, 144)";
     context.fillRect(0, radiusHead * 1.7, radiusHead / 1.2, radiusHead / 4);
 
-    context.fillStyle="rgb(47, 0, 255)";
+    context.fillStyle="rgb(27, 1, 144)";
     context.fillRect(-radiusHead/1.2, radiusHead * 1.7, radiusHead / 1.2, radiusHead / 4);
 
     context.beginPath();
     context.fillStyle="rgb(168, 85, 2)";
     context.ellipse(radiusHead / 1.4, radiusHead, radiusHead / 2, ellipseY / 3, getRadians(240), 0, Math.PI);
-    context.ellipse(0, radiusHead * 1.7, radiusHead, ellipseY / 2, getRadians(360), 0, Math.PI);
+    context.ellipse(0, radiusHead * 1.7, radiusHead * 0.8, ellipseY / 2, getRadians(360), 0, Math.PI);
     context.ellipse(-radiusHead / 1.4, radiusHead, radiusHead / 2, ellipseY / 3, getRadians(-240), 0, Math.PI);
 
     context.fill();
@@ -72,12 +72,12 @@ function drawHead(context)
 
     context.beginPath();
     context.arc(0, 0, radiusHead, getRadians(-12), getRadians(192), 0, Math.PI * 1.2);
-    context.fillStyle="rgb(240, 213, 171)";
+    context.fillStyle="rgb(251, 210, 145)";
     context.fill();  
 
     context.beginPath();
     context.ellipse(0, - radiusHead / 5.5, radiusHead, radiusHead / 5, 0, 0, 2 * Math.PI);
-    context.fillStyle="rgb(240, 213, 171)";
+    context.fillStyle="rgb(251, 210, 145)";
     context.fill();  
     
     context.beginPath();
@@ -149,8 +149,8 @@ function drawHead(context)
 
 function useDragAndDrop(element)
 {
-    var isDragging = false;
-    var offsetX, offsetY;
+    let isDragging = false;
+    let offsetX, offsetY;
 
     element.addEventListener("mousedown", function(e) {
         isDragging = true;
@@ -164,8 +164,8 @@ function useDragAndDrop(element)
 
     element.addEventListener("mousemove", function(e) {
         if (isDragging) {
-            var x = e.clientX - offsetX;
-            var y = e.clientY - offsetY;
+            let x = e.clientX - offsetX;
+            let y = e.clientY - offsetY;
 
             element.style.left = x + "px";
             element.style.top = y + "px";
@@ -176,3 +176,5 @@ function useDragAndDrop(element)
 function getRadians(degrees) {
 	return (Math.PI / 180) * degrees;
 }
+
+//TODO: отдельный класс для персонажа

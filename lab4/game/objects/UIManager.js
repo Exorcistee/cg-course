@@ -23,7 +23,7 @@ export class UIManager {
                     cols = 6;
                     break;
                 case 8:
-                    rows = 6;
+                    rows = 8;
                     cols = 8;
                     break;
                 default:

@@ -24,7 +24,7 @@ export class Game {
 
     generateImageData() {
         return [
-            { id: 1, path: '../pictures/1.png' },
+            { id: 1, path: "../pictures/1.png" },
             { id: 2, path: '../pictures/2.jpg' },
             { id: 3, path: '../pictures/3.jpg' },
             { id: 4, path: '../pictures/4.png' },
@@ -92,14 +92,13 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.container.appendChild(this.renderer.domElement);
         
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
         directionalLight.position.set(0, 0, 1);
         this.scene.add(directionalLight);
         
-        // window.addEventListener('mousemove', this.onMouseMove.bind(this));
     }
 
     createBoard() {
@@ -112,8 +111,6 @@ export class Game {
         const startX = -((this.cols * (cardWidth + gap)) / 2 + (cardWidth + gap) / 2);
         const startY = ((this.rows * (cardHeight + gap)) / 2 - (cardHeight + gap) / 2);
         
-        console.log('Available textures:', this.textures); 
-        
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const index = row * this.cols + col;
@@ -121,14 +118,12 @@ export class Game {
                 const imageInfo = this.imageData.find(img => img.id === imageId);
                 
                 if (!imageInfo) {
-                    console.error('Image info not found for id:', imageId);
                     continue;
                 }
                 
                 const texture = this.textures[imageInfo.path];
                 
                 if (!texture) {
-                    console.error('Texture not loaded for path:', imageInfo.path);
                     continue;
                 }
                 
@@ -304,19 +299,6 @@ export class Game {
 
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        
-        if (this.hoveredCard && this.hoveredCard.highlightMesh && this.hoveredCard.highlightMesh.material) {
-            const time = performance.now() * 0.002;
-            const pulse = Math.sin(time * 3) * 0.1 + 0.9;
-            
-            if (this.hoveredCard.highlightMesh.material.opacity !== undefined) {
-                this.hoveredCard.highlightMesh.material.opacity = pulse * 0.6;
-                if (this.hoveredCard.highlightMesh.position) {
-                    this.hoveredCard.highlightMesh.position.x += Math.sin(time) * 0.01;
-                    this.hoveredCard.highlightMesh.position.y += Math.cos(time * 0.7) * 0.01;
-                }
-            }
-        }
 
         if (TWEEN && typeof TWEEN.update === 'function') {
             TWEEN.update();

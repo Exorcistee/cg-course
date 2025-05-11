@@ -19,7 +19,6 @@ export class Fence {
             roughness: 0.9
         });
 
-
         const postHeight = 1.5;
         const postWidth = 0.1;
         const postDepth = 0.1;
@@ -30,7 +29,7 @@ export class Fence {
 
 
         const createFenceSection = (x, z, rotationY, rotate) => {
-            // Столбы
+
             const postGeometry = new THREE.BoxGeometry(postWidth, postHeight, postDepth);
             
             const post1 = new THREE.Mesh(postGeometry, fenceMaterial);

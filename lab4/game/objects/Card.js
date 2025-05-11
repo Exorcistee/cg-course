@@ -22,23 +22,13 @@ export class Card {
             new THREE.MeshStandardMaterial({ color: 0x888888 }), 
             new THREE.MeshStandardMaterial({ color: 0x888888 }), 
             new THREE.MeshStandardMaterial({ color: 0x888888 }),
-            new THREE.MeshStandardMaterial({ map: this.frontTexture }), 
-            new THREE.MeshStandardMaterial({ map: this.backTexture }) 
+            new THREE.MeshStandardMaterial({ map: this.backTexture }), 
+            new THREE.MeshStandardMaterial({ map: this.frontTexture }) 
         ];
         
         const mesh = new THREE.Mesh(geometry, materials);
         mesh.rotation.y = 0;
         return mesh;
-    }
-
-    showFront() {
-        this.mesh.material[4].map = this.frontTexture;
-        this.mesh.material[4].needsUpdate = true;
-    }
-    
-    showBack() {
-        this.mesh.material[4].map = this.backTexture;
-        this.mesh.material[4].needsUpdate = true;
     }
     
     flip() {

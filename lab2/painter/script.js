@@ -30,14 +30,16 @@ document.addEventListener('DOMContentLoaded', function () {
         context.stroke();
         context.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
     }
-
+    //При отрывании и возвращении кисти рисование продолжается
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
 
     function clearDrawing() 
-    {
+    {   
+        canvas.width = 1280;
+        canvas.height = 720;
         context.clearRect(0, 0, canvas.width, canvas.height);
     }
 
@@ -102,3 +104,4 @@ document.addEventListener('DOMContentLoaded', function () {
         context.strokeStyle = colorPicker.value;
     });
 });
+//Применить model-view-controller

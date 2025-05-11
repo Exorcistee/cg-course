@@ -7,8 +7,6 @@ export class Tree {
 
     createMesh() {
         const treeGroup = new THREE.Group();
-
-
         const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 2, 8);
         const trunkMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x8B4513,
@@ -25,12 +23,10 @@ export class Tree {
             roughness: 0.8
         });
 
-
         const leavesBottom = new THREE.Mesh(leavesGeometry, leavesMaterial);
         leavesBottom.position.y = 2.5;
         leavesBottom.castShadow = true;
         treeGroup.add(leavesBottom);
-
 
         const leavesMiddle = new THREE.Mesh(leavesGeometry, leavesMaterial);
         leavesMiddle.position.y = 3.5;

@@ -16,38 +16,24 @@ export class Cottage {
         const frameWidth = 0.1;
         const glassThickness = 0.02;
 
-        // Загрузка текстур
         const textureLoader = new THREE.TextureLoader();
         const glassTexture = textureLoader.load('./textures/glass_texture.jpg');
         glassTexture.wrapS = glassTexture.wrapT = THREE.RepeatWrapping;
         glassTexture.repeat.set(1, 1);
 
-        // Материал рамы (без изменений)
         const frameMaterial = new THREE.MeshStandardMaterial({
             color: 0x3a3632,
             roughness: 0.7
         });
 
-        // Улучшенный материал стекла с текстурой и отражениями
         const glassMaterial = new THREE.MeshPhysicalMaterial({
-            map: glassTexture, // Текстура стекла
-            transmission: 0.85,
-            roughness: 0.05, 
-            metalness: 0.1, 
-            transparent: true,
-            opacity: 0.9,
-            thickness: glassThickness * 2,
-            clearcoat: 0.5,
-            clearcoatRoughness: 0.1
         });
 
-        // Основная рама
         const frameGeometry = new THREE.BoxGeometry(width + frameWidth*2, height + frameWidth*2, depth);
         const frame = new THREE.Mesh(frameGeometry, frameMaterial);
         frame.position.z = isFront ? 0.05 : -0.05;
         windowGroup.add(frame);
 
-        // Вертикальные элементы
         const verticalFrameGeometry = new THREE.BoxGeometry(frameWidth, height, depth);
         for (let i = -1; i <= 1; i += 2) {
             const verticalFrame = new THREE.Mesh(verticalFrameGeometry, frameMaterial);
@@ -55,7 +41,6 @@ export class Cottage {
             windowGroup.add(verticalFrame);
         }
 
-        // Горизонтальные элементы
         const horizontalFrameGeometry = new THREE.BoxGeometry(width, frameWidth, depth);
         for (let i = -1; i <= 1; i += 2) {
             const horizontalFrame = new THREE.Mesh(horizontalFrameGeometry, frameMaterial);
@@ -63,13 +48,11 @@ export class Cottage {
             windowGroup.add(horizontalFrame);
         }
 
-        // Стекло
         const glassGeometry = new THREE.BoxGeometry(width - frameWidth*0.5, height - frameWidth*0.5, glassThickness);
         const glass = new THREE.Mesh(glassGeometry, glassMaterial);
         glass.position.z = isFront ? depth/2 + glassThickness/2 : -depth/2 - glassThickness/2;
         windowGroup.add(glass);
 
-        // Подоконник
         const sillGeometry = new THREE.BoxGeometry(width + 0.3, 0.05, 0.2);
         const sill = new THREE.Mesh(sillGeometry, frameMaterial);
         sill.position.set(0, -height/2 - 0.025, isFront ? 0.1 : -0.1);
@@ -93,7 +76,6 @@ export class Cottage {
 
         const cottageGroup = new THREE.Group();
 
-        // Стены
         const wallsGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
         const wallsMaterial = new THREE.MeshStandardMaterial({ 
             map: brickTexture,
@@ -105,30 +87,24 @@ export class Cottage {
         walls.receiveShadow = true;
         cottageGroup.add(walls);
 
-        // Крыша
         const roofPeakHeight = 3;
         const overhang = 1;
-        const roofOffsetX = -1.5; // Сдвиг крыши влево на 1.5 метра
 
-        // Форма крыши (треугольное сечение)
         const roofShape = new THREE.Shape();
         roofShape.moveTo(-this.depth/2 - overhang, 0);
         roofShape.lineTo(0, roofPeakHeight);
         roofShape.lineTo(this.depth/2 + overhang, 0);
         roofShape.lineTo(-this.depth/2 - overhang, 0);
 
-        // Выдавливаем по ширине дома
         const extrudeSettings = {
             depth: this.width + overhang * 2,
             bevelEnabled: false
         };
         const roofGeometry = new THREE.ExtrudeGeometry(roofShape, extrudeSettings);
 
-        // Поворачиваем и позиционируем крышу
         roofGeometry.rotateY(Math.PI/2);
-        roofGeometry.translate(-this.width/2 - overhang, this.height, 0); // Добавляем смещение по X
+        roofGeometry.translate(-this.width/2 - overhang, this.height, 0); 
 
-        // Создаем меш крыши
         const roof = new THREE.Mesh(
             roofGeometry,
             new THREE.MeshStandardMaterial({ 
@@ -141,7 +117,6 @@ export class Cottage {
         roof.receiveShadow = true;
         cottageGroup.add(roof);
 
-        // Дверь
         const doorGeometry = new THREE.BoxGeometry(2, 2.5, 0.15);
         const doorMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x8B4513,
@@ -152,7 +127,6 @@ export class Cottage {
         door.position.set(0, 1.25, this.depth / 2 + 0.075);
         cottageGroup.add(door);
 
-        // Окна
         cottageGroup.add(this.createWindowWithFrame(
             new THREE.Vector3(-4.5, 2.2, this.depth/2 + 0.1), 
             0, 
@@ -236,3 +210,5 @@ export class Cottage {
         this.mesh = cottageGroup;
     }
 }
+
+//TODO: Выяснить каким образом THREEJS рисует тени

@@ -14,6 +14,7 @@ window.onload = () => {
     drawV(context, lastX);
 }
 
+//TODO: переделать код позиционирования ()
 function drawU(context, lastX) {
 
     const x = 30;

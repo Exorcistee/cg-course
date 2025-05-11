@@ -1,91 +1,131 @@
+import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/build/three.module.js';
+import * as TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.5.0/dist/tween.esm.js';
+
 export class ChessGame {
-    constructor(scene) {
+    constructor(scene, board) {
         this.scene = scene;
+        this.board = board;
         this.currentPlayer = 'white';
         this.selectedPiece = null;
-        this.gameState = 'idle';
+        this.gameState = 'idle'; // 'idle' | 'playing' | 'gameOver'
         this.moveHistory = [];
-        this.animatingPieces = new Set();
+        this.soundEnabled = true;
+        this.animationSpeed = 1.0;
     }
 
-    start() {
+    async start() {
+        if (this.gameState === 'playing') return;
+        
         this.gameState = 'playing';
         console.log('Game started! White moves first.');
-        this.playDemoMoves();
-    }
-
-    reset() {
-        this.currentPlayer = 'white';
-        this.selectedPiece = null;
-        this.gameState = 'idle';
-        this.moveHistory = [];
-        this.animatingPieces.clear();
         
-        // Сбрасываем все фигуры в исходное положение
-        this.scene.chessBoard.pieces.forEach(piece => {
-            piece.mesh.position.copy(piece.originalPosition);
-            if (piece.isSelected) piece.deselect();
-        });
+        // Инициализация звуков
+        this.initSounds();
+        
+        // Запуск демо-партии
+        await this.playDemoMoves();
+        
+        // После демо можно переключить в режим ожидания хода
+        this.gameState = 'waitingForInput';
     }
 
-    playDemoMoves() {
+    initSounds() {
+        this.sounds = {
+            move: new Audio('sounds/move.mp3'),
+            capture: new Audio('sounds/capture.mp3'),
+            check: new Audio('sounds/check.mp3')
+        };
+    }
+
+    playSound(type) {
+        if (!this.soundEnabled) return;
+        this.sounds[type].currentTime = 0;
+        this.sounds[type].play().catch(e => console.warn("Sound error:", e));
+    }
+
+    async playDemoMoves() {
         const demoMoves = [
-            { pieceId: 'wp2', target: [ -2.5, 0.3, -0.5 ] },
-            { pieceId: 'bp7', target: [ 2.5, 0.3, 0.5 ] },
-            { pieceId: 'wp2', target: [ -2.5, 0.3, 0.5 ] },
-            { pieceId: 'bn2', target: [ 1.5, 0.3, 2.5 ] },
-            { pieceId: 'wr1', target: [ -3.5, 0.3, -0.5 ] }
+            { pieceId: 'wp2', to: [-2.5, 0.3, -0.5] }, // e2-e4
+            { pieceId: 'bp7', to: [2.5, 0.3, 0.5] },    // e7-e5
+            { pieceId: 'wp2', to: [-2.5, 0.3, 0.5] },    // e4-e5 (взятие)
+            { pieceId: 'bn2', to: [1.5, 0.3, 2.5] },    // g8-f6
+            { pieceId: 'wr1', to: [-3.5, 0.3, -0.5] }   // h1-h5
         ];
 
-        let moveIndex = 0;
-        
-        const playNextMove = () => {
-            if (moveIndex >= demoMoves.length || this.gameState !== 'playing') return;
+        for (const move of demoMoves) {
+            if (this.gameState !== 'playing') break;
             
-            const move = demoMoves[moveIndex];
-            const piece = this.scene.chessBoard.pieces.find(p => p.id === move.pieceId);
+            const piece = this.board.pieces.find(p => p.id === move.pieceId);
+            if (!piece) continue;
             
-            if (piece) {
-                this.movePieceWithAnimation(piece, move.target, 1.5)
-                    .then(() => {
-                        moveIndex++;
-                        setTimeout(playNextMove, 500);
-                    });
-            }
-        };
+            await this.movePiece(piece, move.to);
+            await this.delay(500); // Пауза между ходами
+        }
         
-        playNextMove();
+        this.gameState = 'gameOver';
+        console.log('Demo game completed!');
     }
 
-    async movePieceWithAnimation(piece, targetPosition, duration) {
-        return new Promise((resolve) => {
-            piece.startAnimation(targetPosition, duration);
-            this.animatingPieces.add(piece);
+    async movePiece(piece, targetPosition) {
+        return new Promise(resolve => {
+            // 1. Поднимаем фигуру
+            new TWEEN.Tween(piece.mesh.position)
+                .to({ 
+                    y: piece.mesh.position.y + 0.5 
+                }, 300 * this.animationSpeed)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
             
-            const checkAnimation = () => {
-                const done = piece.updateAnimation(performance.now());
-                
-                if (done) {
-                    this.animatingPieces.delete(piece);
+            // 2. Перемещаем по X/Z
+            new TWEEN.Tween(piece.mesh.position)
+                .to({
+                    x: targetPosition[0],
+                    z: targetPosition[2]
+                }, 800 * this.animationSpeed)
+                .delay(300 * this.animationSpeed)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+            
+            // 3. Опускаем фигуру
+            new TWEEN.Tween(piece.mesh.position)
+                .to({ 
+                    y: targetPosition[1] 
+                }, 300 * this.animationSpeed)
+                .delay(1100 * this.animationSpeed)
+                .easing(TWEEN.Easing.Quadratic.In)
+                .onComplete(() => {
+                    this.playSound('move');
                     this.moveHistory.push({
                         piece,
                         from: piece.originalPosition.clone(),
                         to: new THREE.Vector3(...targetPosition)
                     });
-                    piece.originalPosition.copy(piece.currentPosition);
+                    piece.originalPosition.copy(piece.mesh.position);
                     resolve();
-                } else {
-                    requestAnimationFrame(checkAnimation);
-                }
-            };
-            
-            checkAnimation();
+                })
+                .start();
         });
     }
 
-    update() {
-        this.animatingPieces.forEach(piece => {
-            piece.updateAnimation(performance.now());
+    reset() {
+        TWEEN.removeAll();
+        this.currentPlayer = 'white';
+        this.selectedPiece = null;
+        this.gameState = 'idle';
+        this.moveHistory = [];
+        
+        // Возвращаем все фигуры на место
+        this.board.pieces.forEach(piece => {
+            piece.mesh.position.copy(piece.originalPosition);
+            if (piece.isSelected) piece.deselect();
         });
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    update() {
+        TWEEN.update();
     }
 }
