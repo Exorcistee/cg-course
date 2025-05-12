@@ -1,5 +1,6 @@
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/build/three.module.js';
 import { OBJLoader } from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/loaders/MTLLoader.js';
 
 export class ChessPiece {
     constructor(type, color, position) {
@@ -12,52 +13,116 @@ export class ChessPiece {
 
     async load() {
     try {
-        const modelPath = `models/${this.type}`;
-        
-        // Загружаем модель
+        const modelPath = 'models/';
+        const mtlFile = {
+            pawn: '12944_Stone_Chess_Pawn_Side_A_V2_L3.mtl',
+            rook: '12941_Stone_Chess_Rook_Side_A_V2_l1.mtl',
+            knight: '12943_Stone_Chess_Knight_Side_A_v2_l1.mtl',
+            bishop: '12942_Stone_Chess_Bishop_V2_l1.mtl',
+            queen: '12940_Stone_Chess_Queen_Side_A_V2_l1.mtl',
+            king: '12939_Stone_Chess_King_Side_A_V2_l1.mtl'
+        };
+
+
+        const materials = await new Promise((resolve, reject) => {
+            new MTLLoader()
+                .setPath(modelPath)
+                .load(
+                    mtlFile[this.type],
+                    (materials) => {
+
+                        materials.preload();
+                        console.log(materials);
+                        
+                        if (this.color === 'black') {
+                            Object.values(materials.materials).forEach(material => {
+                                material.map = material.specularMap;
+                                material.metalness = 0.8;
+                                material.roughness = 0.3;
+                            });
+                        }
+                        resolve(materials);
+                    },
+                    undefined,
+                    reject
+                );
+        });
+
         const object = await new Promise((resolve, reject) => {
-            new OBJLoader().load(
-                `${modelPath}.obj`,
-                resolve,
-                undefined,
-                reject
-            );
+            new OBJLoader()
+                .setMaterials(materials)
+                .setPath(modelPath)
+                .load(
+                    `${this.type}.obj`,
+                    (obj) => {
+                        
+                        obj.traverse(child => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        resolve(obj);
+                    },
+                    undefined,
+                    reject
+                );
         });
 
         this.mesh = object;
+        const axes = new THREE.AxesHelper(5);
+        this.mesh.add(axes);
         
-        // 1. Сначала центрируем геометрию
+       
         this.mesh.traverse(child => {
             if (child.isMesh && child.geometry) {
-                child.geometry.center();
+                child.geometry = child.geometry.clone();
+                child.geometry.center();  
+                
+                child.geometry.computeBoundingBox();
+                const bbox = child.geometry.boundingBox;
+                let height = bbox.max.y - bbox.min.y;
+                const minY = bbox.min.y;
+                
+                const heightAdjustments = {
+                    pawn: 2.5,
+                    rook: 3.5,
+                    knight: 5.4,
+                    bishop: 2,
+                    queen: 2.1,
+                    king: 2
+                };
+                
+                if (heightAdjustments[this.type]) {
+                    height -= heightAdjustments[this.type];
+                }
+    
+                const position = child.geometry.attributes.position;
+                for (let i = 0; i < position.count; i++) {
+                    position.setY(i, position.getY(i) + height/2);
+                    position.setZ(i, position.getZ(i) + height);
+                }              
+                position.needsUpdate = true;
+                child.geometry.computeBoundingBox();
             }
         });
-
-        // 2. Вычисляем автоматический масштаб
-        
+    
         this.mesh.scale.set(0.1, 0.1, 0.1);
         
-        // 3. Поворот и позиционирование
         this.mesh.rotation.x = -Math.PI / 2;
         this.mesh.position.copy(this.position);
-        
-        if (this.color=="white") {
+        this.mesh.position.y = 10;
+        this.mesh.updateMatrix();
+    
+        if (this.color === "white") {
             this.mesh.rotation.z = -Math.PI;
         }
-
-        // 4. Настройка теней
+    
         this.mesh.traverse(child => {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                
-                // Устанавливаем материал, если не загружен
-                if (!child.material) {
-                    child.material = new THREE.MeshStandardMaterial({
-                        color: this.color === 'white' ? 0xffffff : 0x222222,
-                        roughness: 0.7
-                    });
-                }
+                console.log('Texture status:', child.material.map ? 'Loaded' : 'Missing');
             }
         });
         

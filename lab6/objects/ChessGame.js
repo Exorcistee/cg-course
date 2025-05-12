@@ -7,7 +7,7 @@ export class ChessGame {
         this.board = board;
         this.currentPlayer = 'white';
         this.selectedPiece = null;
-        this.gameState = 'idle'; // 'idle' | 'playing' | 'gameOver'
+        this.gameState = 'idle'; 
         this.moveHistory = [];
         this.soundEnabled = true;
         this.animationSpeed = 1.0;
@@ -19,22 +19,9 @@ export class ChessGame {
         this.gameState = 'playing';
         console.log('Game started! White moves first.');
         
-        // Инициализация звуков
-        this.initSounds();
-        
-        // Запуск демо-партии
         await this.playDemoMoves();
         
-        // После демо можно переключить в режим ожидания хода
         this.gameState = 'waitingForInput';
-    }
-
-    initSounds() {
-        this.sounds = {
-            move: new Audio('sounds/move.mp3'),
-            capture: new Audio('sounds/capture.mp3'),
-            check: new Audio('sounds/check.mp3')
-        };
     }
 
     playSound(type) {

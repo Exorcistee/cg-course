@@ -6,7 +6,7 @@ import { ChessPiece } from './ChessPiece.js';
 export class ChessBoard {
     constructor() {
         this.size = 8;
-        this.squareSize = 1.0; // Размер клетки (1 единица = 1 клетка)
+        this.squareSize = 1.0; 
         this.boardSize = this.size * this.squareSize;
         this.mesh = new THREE.Group();
         this.pieces = [];
@@ -20,9 +20,8 @@ export class ChessBoard {
     }
 
     createBoard() {
-    // Смещение всей доски (фигуры + клетки + основание)
-    const boardOffsetX = 2; // Смещение по X (если нужно)
-    const boardOffsetZ = 0; // Сдвигаем доску вперед по Z
+    const boardOffsetX = 2; 
+    const boardOffsetZ = 0;
 
     // 1. Основание доски
     const boardGeometry = new THREE.BoxGeometry(
@@ -37,7 +36,7 @@ export class ChessBoard {
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.position.set(
         boardOffsetX, 
-        -0.2, // Чуть ниже фигур
+        0, // Чуть ниже фигур
         boardOffsetZ // Сдвиг вперед
     );
     board.receiveShadow = true;
@@ -50,7 +49,7 @@ export class ChessBoard {
     );
     
     const darkMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x769656,
+        color: 0x333333,
         roughness: 0.7
     });
     
