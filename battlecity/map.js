@@ -7,6 +7,7 @@ export class Map {
         this.blockSize = 2;
         this.mapSize = 13; // 13x13 blocks (original was 13x13 tiles)
         this.groundTiles = [];
+        this.enemySpawnPoints = [];
     }
 
     createTiledGround() {
@@ -63,35 +64,47 @@ export class Map {
     }
 
     generate() {
-
         this.clear();
-        let spawnPoint;
+        let playerSpawn;
+        this.enemySpawnPoints = []; // Очищаем массив точек спавна
+        
         const levelMatrix = Levels.getLevel(1);
         this.createTiledGround();
-        console.log(levelMatrix);
-        for (let row = 0; row < this.mapSize; row++) {
-            for (let col = 0; col < this.mapSize; col++) {
-                if (levelMatrix[row][col] == "S") {
-                    spawnPoint = this.calculateWorldPosition(col, row);
-                    console.log(spawnPoint);
-                    const spawnMarkerGeometry = new THREE.SphereGeometry(0.5);
-                    const spawnMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-                    this.spawnMarker = new THREE.Mesh(spawnMarkerGeometry, spawnMarkerMaterial);
-                    this.spawnMarker.position.set(spawnPoint.x, 0, spawnPoint.z);
-                    this.scene.add(this.spawnMarker);
-                }
-            }
-        }
-
-        for (let row = 0; row < this.mapSize; row++) {
-            for (let col = 0; col < this.mapSize; col++) {
-                const blockType = levelMatrix[row][col];
-                this.placeBlock(col - 6, row - 6, blockType);
-            }
-        }
-        return spawnPoint;
         
-    }
+        // Первый проход: находим точки спавна
+        for (let row = 0; row < this.mapSize; row++) {
+                    for (let col = 0; col < this.mapSize; col++) {
+                        const blockType = levelMatrix[row][col];
+                        if (blockType === "S") {
+                            playerSpawn = this.calculateWorldPosition(col, row);
+                        }
+                        else if (blockType === "E") {
+                            const enemySpawn = this.calculateWorldPosition(col, row);
+                            this.enemySpawnPoints.push(enemySpawn);
+                            
+                            // Визуализация точки спавна (красная сфера)
+                            const markerGeometry = new THREE.SphereGeometry(0.5);
+                            const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                            marker.position.set(enemySpawn.x, 0.5, enemySpawn.z);
+                            this.scene.add(marker);
+                        }
+                    }
+                }
+
+                // Второй проход: создаем блоки
+                for (let row = 0; row < this.mapSize; row++) {
+                    for (let col = 0; col < this.mapSize; col++) {
+                        const blockType = levelMatrix[row][col];
+                        this.placeBlock(col - 6, row - 6, blockType);
+                    }
+                }
+
+                return { 
+                    playerSpawn: playerSpawn, 
+                    enemySpawns: this.enemySpawnPoints 
+                };
+            }
 
     clear() {
         this.grid.forEach(block => {
@@ -146,25 +159,48 @@ export class Map {
                     color: 0x808080,
                     map: new THREE.TextureLoader().load('flag.png')
                 });
+            case "E":
+                geometry = new THREE.BoxGeometry(this.blockSize, this.blockSize, this.blockSize);
+                material = new THREE.MeshStandardMaterial({ 
+                    color: 0x808080,
+                });
             default:
                 return;
         }
         
         const block = new THREE.Mesh(geometry, material);
         block.position.set(x * this.blockSize, type === 3 ? 0 : this.blockSize/2, z * this.blockSize);
-        block.userData = { type, health: type === 2 ? Infinity : 1 };
+        block.userData = {
+            type: type,
+            passable: type === 5, 
+            destructible: type === 1, 
+            isWater: type === 3 
+        };
+        
         this.scene.add(block);
         this.grid.push(block);
     }
 
-    checkCollision(position, radius) {
+    checkCollision(position, radius = 0) {
+        const blockSize = this.blockSize;
+        const gridX = Math.round(position.x / blockSize);
+        const gridZ = Math.round(position.z / blockSize);
+        
+        // Проверяем выход за границы карты
+        if (Math.abs(gridX) > this.mapSize/2 || Math.abs(gridZ) > this.mapSize/2) {
+            return null; // Возвращаем null вместо true
+        }
+        
+        // Проверяем столкновение с блоками
         for (const block of this.grid) {
-            if (block.userData.type === 4) continue;
-            const distance = position.distanceTo(block.position);
-            if (distance < radius + this.blockSize/2) {
-                return block;
+            if (!block.userData.passable) { // Только непроходимые блоки
+                const distance = position.distanceTo(block.position);
+                if (distance < blockSize/2 + radius) {
+                    return block;
+                }
             }
         }
-        return false;
+        
+        return null;
     }
 }

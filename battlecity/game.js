@@ -20,6 +20,8 @@ export class Game {
         this.gameOver = false;
         this.levelCompleted = false;
         this.models = {};
+        this.enemySpawnPoints = [];
+        this.enemySpawnInterval = null;
     }
 
     async loadAssets() {
@@ -51,7 +53,11 @@ export class Game {
         this.setupLights();
         this.setupControls();
         this.setupMap();
+        const spawnData = this.map.generate();
+        this.playerSpawn = spawnData.playerSpawn;
+        this.enemySpawnPoints = spawnData.enemySpawns;      
         this.setupPlayer();
+        this.startEnemySpawning();
         this.setupEventListeners();
         
         this.animate();
@@ -64,8 +70,9 @@ export class Game {
     }
 
     setupCamera() {
-        this.camera.position.set(0, 30, 30);
+        this.camera.position.set(0, 20, -10);
         this.camera.lookAt(0, 0, 0);
+        this.camera.controls = false;
     }
 
     setupLights() {
@@ -78,33 +85,50 @@ export class Game {
     }
 
     setupControls() {
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
     }
 
     setupMap() {
         this.map = new Map(this.scene);
-        this.map.generate();
+        const spawnData = this.map.generate();
+        this.playerSpawn = spawnData.playerSpawn;
+        this.enemySpawnPoints = spawnData.enemySpawns;
     }
 
     async setupPlayer() {
-        const spawnPoint = this.map.generate(this.currentLevel);
         this.player = new PlayerTank(this.scene, this);
         await this.player.loadModel(); 
-        this.player.spawn(spawnPoint.x, spawnPoint.z);
+        this.player.spawn(this.playerSpawn.x, this.playerSpawn.z);
     }
 
 
-    spawnEnemy() {
-        if (this.enemies.length < 5 && this.enemyCount > 0) {
-            const enemy = new EnemyTank(this.scene, this);
-            enemy.loadModel().then(() => {
-                enemy.spawn();
-                this.enemies.push(enemy);
-                this.enemyCount--;
-                document.getElementById('enemies').textContent = `Enemies: ${this.enemyCount}`;
-            });
+    async spawnEnemy() {
+        console.log(this.enemySpawnPoints.length);
+        if (this.enemySpawnPoints.length === 0 || this.enemyCount <= 0) return;
+        
+        const spawnIndex = Math.floor(Math.random() * this.enemySpawnPoints.length);
+        const spawnPoint = this.enemySpawnPoints[spawnIndex];
+        
+        const isPositionFree = this.enemies.every(enemy => 
+            enemy.position.distanceTo(spawnPoint) > this.map.blockSize * 1.5
+        );
+        
+        if (!isPositionFree) return;
+        
+        const enemy = new EnemyTank(this.scene, this);
+        try {
+            await enemy.loadModel();
+            enemy.spawn(spawnPoint.x, spawnPoint.z);
+            this.enemies.push(enemy);
+            this.enemyCount--;
+            document.getElementById('enemies').textContent = `Enemies: ${this.enemyCount}`;
+        } catch (error) {
+            console.error("Failed to spawn enemy:", error);
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            enemy.model = new THREE.Mesh(geometry, material);
+            enemy.spawn(spawnPoint.x, spawnPoint.z);
+            this.enemies.push(enemy);
+            this.enemyCount--;
         }
     }
 
@@ -113,7 +137,7 @@ export class Game {
         document.addEventListener('keydown', (e) => this.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.onKeyUp(e));
         
-        setInterval(() => this.spawnEnemy(), 3000);
+        setInterval(() => this.spawnEnemy(), 3000 + Math.random() * 2000);
     }
 
     onWindowResize() {
@@ -122,9 +146,24 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    startEnemySpawning() {
+    // Спавн врагов каждые 3 секунды
+    this.enemySpawnInterval = setInterval(() => {
+        if (this.enemyCount > 0 && this.enemies.length < 5) {
+            console.log(this.enemyCount, this.enemies.length);
+            this.spawnEnemy();
+        }
+    }, 3000);
+}
+
     onKeyDown(event) {
         if (this.player) {
-            this.player.handleKeyDown(event);
+            if (event.code === 'Space') {
+                this.player.keys.Space = true;
+                this.player.shoot();
+            } else {
+                this.player.handleKeyDown(event);
+            }
         }
     }
 
@@ -135,18 +174,28 @@ export class Game {
     }
 
     update() {
-        if (this.controls) this.controls.update();
+        const deltaTime = 16; // Примерное значение deltaTime
         
-        if (this.player) this.player.update();
+        // Обновление игрока
+        if (this.player && !this.player.destroyed) {
+            this.player.update(deltaTime);
+        }
         
-        this.enemies.forEach(enemy => enemy.update());
+        // Обновление врагов
+        this.enemies.forEach(enemy => {
+            if (!enemy.destroyed) {
+                enemy.update(deltaTime);
+            }
+        });
+        
+        // Обновление снарядов
         this.projectiles.forEach(projectile => projectile.update());
         
+        // Удаление уничтоженных объектов
         this.projectiles = this.projectiles.filter(p => !p.destroyed);
-        
-        const destroyedEnemies = this.enemies.filter(e => e.destroyed);
         this.enemies = this.enemies.filter(e => !e.destroyed);
         
+        // Проверка завершения уровня
         if (this.enemyCount === 0 && this.enemies.length === 0 && !this.levelCompleted) {
             this.levelCompleted = true;
             alert('Level completed!');

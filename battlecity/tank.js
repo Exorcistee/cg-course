@@ -1,3 +1,5 @@
+import { Projectile } from "./projectile.js";
+
 export class PlayerTank {
     constructor(scene, game) {
         this.scene = scene;
@@ -16,12 +18,43 @@ export class PlayerTank {
             ArrowRight: false,
             Space: false
         };
-        this.shootCooldown = 0;
+        this.shootCooldown = 500;
+        this.lastShotTime = 0;
         this.tankSize = 1;
-        this.tankRotation = 0; // Текущий угол поворота в радианах
+        this.tankRotation = 0; 
         this.rotateSpeed = Math.PI / 60; 
-        this.currentBlock = null; // Текущий блок под танком
+        this.currentBlock = null; 
         this.adjacentBlocks = [];
+        this.setupCollider();
+    }
+
+    setupCollider() {
+        // Создаем простой коллайдер (цилиндр для танка)
+        const geometry = new THREE.CylinderGeometry(
+            this.tankSize * 0.5, 
+            this.tankSize * 0.5, 
+            this.tankSize * 0.6, 
+            16 
+        );
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x00ff00, 
+            wireframe: true,
+            visible: false 
+        });
+        
+        this.collider = new THREE.Mesh(geometry, material);
+        this.collider.rotation.x = Math.PI / 2; 
+        this.scene.add(this.collider);
+    }
+
+    updateCollider() {
+        if (this.model && this.collider) {
+
+            this.collider.position.copy(this.model.position);
+            this.collider.position.y = this.tankSize * 0.3; 
+            
+            this.collider.rotation.z = this.tankRotation;
+        }
     }
 
     async loadModel() {
@@ -30,13 +63,11 @@ export class PlayerTank {
         loader.load('tank.glb', (gltf) => {
             this.model = gltf.scene;
             
-            // Масштабирование
             const bbox = new THREE.Box3().setFromObject(this.model);
             const size = bbox.getSize(new THREE.Vector3());
             const scale = this.game.map.blockSize / Math.max(size.x, size.y, size.z);
             this.model.scale.set(scale, scale, scale);
             
-            // Находим башню
             this.model.traverse(child => {
                 if (child.name.includes('Tank_Gun') || child.name.includes('Tower')) {
                     this.turret = child;
@@ -63,22 +94,17 @@ export class PlayerTank {
         this.scene.add(this.model);
     }
 
-    checkCollisions() {
-        const tankRadius = this.game.map.blockSize * 0.4; 
-        
-        for (const {block, direction} of this.adjacentBlocks) {
-            console.log(block.userData);
-            if (!block.userData.passable) {
-                const distance = this.position.distanceTo(block.position);
-                if (distance < tankRadius + this.game.map.blockSize/2) {
-                    const pushForce = direction.clone()
-                        .multiplyScalar(this.game.map.blockSize * 0.6);
-                    
-                    this.position.add(pushForce);
-                    this.model.position.copy(this.position);
+    checkCollision(position, radius = 0) {
+        for (const block of this.grid) {
+            // Снаряды должны сталкиваться только с непроходимыми и неводными блоками
+            if (!block.userData.passable && !block.userData.isWater) {
+                const distance = position.distanceTo(block.position);
+                if (distance < this.blockSize/2 + radius) {
+                    return block;
                 }
             }
         }
+        return null;
     }
 
     updateAdjacentBlocks() {
@@ -105,33 +131,89 @@ export class PlayerTank {
         }
     }
 
+    checkMovementCollision(newPosition) {
+        // Проверяем коллизию с картой
+        const gridX = Math.round(newPosition.x / this.game.map.blockSize);
+        const gridZ = Math.round(newPosition.z / this.game.map.blockSize);
+        
+        // Проверяем выход за границы карты
+        if (Math.abs(gridX) > this.game.map.mapSize/2 || 
+            Math.abs(gridZ) > this.game.map.mapSize/2) {
+            return true; // Коллизия с границей карты
+        }
+        
+        // Проверяем все блоки в радиусе
+        for (const block of this.game.map.grid) {
+            if (block.userData.isWater) {
+                // Танк не может ездить по воде
+                const distance = newPosition.distanceTo(block.position);
+                if (distance < this.game.map.blockSize * 1) {
+                    return true;
+                }
+            }
+            else if (!block.userData.passable) {
+                // Для непроходимых блоков (кроме воды)
+                const distance = newPosition.distanceTo(block.position);
+                if (distance < this.game.map.blockSize * 1) {
+                    return true;
+                }
+            }
+        }
+        
+        return false; // Коллизий нет
+    }
+
     update() {
         if (!this.isModelLoaded) return;
 
-        // Поворот
         if (this.keys.ArrowLeft) this.tankRotation += this.rotateSpeed;
         if (this.keys.ArrowRight) this.tankRotation -= this.rotateSpeed;
         
-        // Направление движения
         this.direction.set(
             Math.sin(this.tankRotation),
             0,
             Math.cos(this.tankRotation)
         ).normalize();
         
-        // Движение
         const newPosition = this.position.clone();
         if (this.keys.ArrowUp) newPosition.add(this.direction.clone().multiplyScalar(this.speed));
         if (this.keys.ArrowDown) newPosition.add(this.direction.clone().multiplyScalar(-this.speed));
         
-        // Коллизии
-        if (!this.game.map.checkCollision(newPosition)) {
+        if (!this.checkMovementCollision(newPosition)) {
             this.position.copy(newPosition);
         }
+        
+        this.updateCollider();    
         
         // Обновление модели
         this.model.position.copy(this.position);
         this.model.rotation.y = this.tankRotation - Math.PI; // Учёт начального поворота!
+        if (this.keys.Space) {
+            this.shoot();
+            this.keys.Space = false; // Сбрасываем флаг нажатия пробела
+        }
+    }
+
+    takeDamage() {
+        this.health--;
+        if (this.health <= 0) {
+            this.destroy();
+            this.game.lives--;
+            document.getElementById('lives').textContent = `Lives: ${this.game.lives}`;
+            
+            if (this.game.lives > 0) {
+                setTimeout(() => this.respawn(), 2000);
+            } else {
+                this.game.gameOver = true;
+                alert('Game Over!');
+            }
+        }
+    }
+
+    respawn() {
+        this.destroyed = false;
+        this.health = 1;
+        this.spawn(this.game.playerSpawn.x, this.game.playerSpawn.z);
     }
 
     spawn(x, z) {
@@ -153,15 +235,23 @@ export class PlayerTank {
     }
 
     shoot() {
-        if (this.destroyed) return;
+        const currentTime = Date.now();
+        if (currentTime - this.lastShotTime < this.shootCooldown) return;
+        
+        const shootPosition = this.position.clone().add(
+            this.direction.clone().multiplyScalar(1.5)
+        );
         
         const projectile = new Projectile(
             this.scene,
-            this.position.clone(),
+            this.game, // Передаем ссылку на игру
+            shootPosition,
             this.direction.clone(),
             'player'
         );
+        
         this.game.projectiles.push(projectile);
+        this.lastShotTime = currentTime;
     }
 
     handleKeyDown(event) {
@@ -194,8 +284,7 @@ export class PlayerTank {
 
     destroy() {
         this.destroyed = true;
-        if (this.model) {
-            this.scene.remove(this.model);
-        }
+        if (this.model) this.scene.remove(this.model);
+        if (this.collider) this.scene.remove(this.collider);
     }
 }

@@ -1,94 +1,169 @@
+import { GLTFLoader } from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/loaders/GLTFLoader.js';
+import { Projectile } from './projectile.js';
+
 export class EnemyTank {
     constructor(scene, game) {
         this.scene = scene;
         this.game = game;
         this.model = null;
-        this.speed = 0.05;
-        this.rotationSpeed = 0.03;
+        this.speed = 0.03;
         this.position = new THREE.Vector3();
-        this.direction = new THREE.Vector3();
+        this.direction = new THREE.Vector3(1, 0, 0); // Начальное направление
         this.health = 1;
         this.destroyed = false;
+        this.shootCooldown = 2000;
+        this.lastShotTime = 0;
+        this.tankSize = 1.5;
         this.moveTimer = 0;
-        this.shootTimer = 0;
-        this.type = Math.floor(Math.random() * 3); // Different enemy types
+        this.moveDuration = 2000 + Math.random() * 3000; // Время движения в одном направлении
+        this.stuckTimer = 0;
+        this.currentDirection = this.getRandomDirection(); // Начальное направление
     }
 
-    spawn() {
-        const modelNames = ['enemy_tank_1', 'enemy_tank_2', 'enemy_tank_3'];
-        const modelName = modelNames[this.type % modelNames.length];
-        
-        if (this.game.models[modelName]) {
-            this.model = this.game.models[modelName].clone();
-            this.model.position.copy(this.position);
-            this.model.lookAt(this.position.clone().add(this.direction));
-            this.scene.add(this.model);
-        } else {
-            console.warn(`Enemy tank model ${modelName} not found`);
-            const colors = [0xff0000, 0x00ff00, 0x0000ff];
-            this.model = new THREE.Mesh(
-                new THREE.BoxGeometry(1, 1, 1),
-                new THREE.MeshStandardMaterial({ color: colors[this.type % colors.length] })
-            );
-            this.scene.add(this.model);
-        }
+    async loadModel() {
+        return new Promise((resolve, reject) => {
+            const loader = new GLTFLoader();
+            loader.load('tank.glb', (gltf) => {
+                this.model = gltf.scene;
+                
+                // Масштабируем модель под размер карты
+                const bbox = new THREE.Box3().setFromObject(this.model);
+                const size = bbox.getSize(new THREE.Vector3());
+                const scale = this.game.map.blockSize / Math.max(size.x, size.z);
+                this.model.scale.set(scale, scale, scale);
+                
+                // Находим башню для поворота
+                this.model.traverse(child => {
+                    if (child.isMesh && child.name.includes('Turret')) {
+                        this.turret = child;
+                    }
+                });
+                
+                resolve();
+            }, undefined, reject);
+        });
     }
 
-    update() {
+    getRandomDirection() {
+        const directions = [
+            new THREE.Vector3(1, 0, 0),  // Вправо
+            new THREE.Vector3(-1, 0, 0), // Влево
+            new THREE.Vector3(0, 0, 1),  // Вверх
+            new THREE.Vector3(0, 0, -1)  // Вниз
+        ];
+        return directions[Math.floor(Math.random() * directions.length)];
+    }
+
+    update(deltaTime) {
         if (this.destroyed) return;
         
-        this.moveTimer--;
-        this.shootTimer--;
+        this.moveTimer += deltaTime;
         
-        // AI movement
-        if (this.moveTimer <= 0) {
-            // Change direction randomly
-            const rotation = new THREE.Quaternion();
-            rotation.setFromAxisAngle(
-                new THREE.Vector3(0, 1, 0),
-                (Math.random() - 0.5) * Math.PI
-            );
-            this.direction.applyQuaternion(rotation);
-            this.direction.normalize();
-            
-            this.moveTimer = Math.floor(Math.random() * 100) + 50;
-        }
-        
-        // Move forward
-        const moveVector = this.direction.clone().multiplyScalar(this.speed);
-        const newPosition = this.position.clone().add(moveVector);
-        
-        // Check collision with map
-        const collidedBlock = this.game.map.checkCollision(newPosition, 0.8);
-        if (!collidedBlock || collidedBlock.userData.type === 'water') {
-            this.position.copy(newPosition);
-        } else {
-            // Change direction if collided
+        // Меняем направление каждые moveDuration миллисекунд
+        if (this.moveTimer > this.moveDuration) {
+            this.changeDirection();
             this.moveTimer = 0;
         }
         
-        // Update model
-        if (this.model) {
-            this.model.position.copy(this.position);
-            this.model.lookAt(this.position.clone().add(this.direction));
+        // Движение
+        const newPosition = this.position.clone().add(
+            this.direction.clone().multiplyScalar(this.speed * deltaTime / 16)
+        );
+        
+        // Проверка коллизий
+        if (!this.game.map.checkCollision(newPosition, this.tankSize * 0.4)) {
+            this.position.copy(newPosition);
+        } else {
+            this.changeDirection();
         }
         
-        // Shooting
-        if (this.shootTimer <= 0) {
-            this.shoot();
-            this.shootTimer = Math.floor(Math.random() * 100) + 100;
+        // Обновление позиции и поворота модели
+        if (this.model) {
+            this.model.position.copy(this.position);
+            this.model.rotation.y = Math.atan2(this.direction.x, this.direction.z);
         }
+    }
+
+    changeDirection() {
+            // Возможные направления (только вверх/вниз/влево/вправо)
+            const directions = [
+                new THREE.Vector3(1, 0, 0),   // Вправо
+                new THREE.Vector3(-1, 0, 0),  // Влево
+                new THREE.Vector3(0, 0, 1),   // Вверх
+                new THREE.Vector3(0, 0, -1)   // Вниз
+            ];
+            
+            // Выбираем случайное направление, исключая текущее
+            const possibleDirections = directions.filter(dir => !dir.equals(this.direction));
+            this.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+            this.model.rotation.set(0, Math.PI * -1, 0); 
+    }
+
+    takeDamage() {
+        this.health--;
+        if (this.health <= 0) {
+            this.destroy();
+            // Добавляем эффект взрыва
+            this.createExplosion();
+        }
+    }
+
+    createExplosion() {
+        const explosionGeometry = new THREE.SphereGeometry(1, 8, 8);
+        const explosionMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xFF4500,
+            transparent: true,
+            opacity: 0.8
+        });
+        const explosion = new THREE.Mesh(explosionGeometry, explosionMaterial);
+        explosion.position.copy(this.position);
+        this.scene.add(explosion);
+        
+        // Анимация взрыва
+        let scale = 1;
+        const animateExplosion = () => {
+            scale += 0.1;
+            explosion.scale.set(scale, scale, scale);
+            explosionMaterial.opacity -= 0.05;
+            
+            if (explosionMaterial.opacity > 0) {
+                requestAnimationFrame(animateExplosion);
+            } else {
+                this.scene.remove(explosion);
+            }
+        };
+        animateExplosion();
+    }
+
+    canSeePlayer() {
+        if (!this.game.player || this.game.player.destroyed) return false;
+        
+        const directionToPlayer = new THREE.Vector3().subVectors(
+            this.game.player.position, 
+            this.position
+        ).normalize();
+        
+        const isAligned = Math.abs(directionToPlayer.x) > 0.9 || 
+                         Math.abs(directionToPlayer.z) > 0.9;
+        
+        return isAligned && !this.game.map.checkLineOfSight(this.position, this.game.player.position);
     }
 
     shoot() {
         if (this.destroyed) return;
         
+        const shootPosition = this.position.clone().add(
+            this.currentDirection.clone().multiplyScalar(1.5)
+        );
+        
         const projectile = new Projectile(
             this.scene,
-            this.position.clone(),
-            this.direction.clone(),
+            this.game,
+            shootPosition,
+            this.currentDirection.clone(),
             'enemy'
         );
+        
         this.game.projectiles.push(projectile);
     }
 
@@ -101,8 +176,50 @@ export class EnemyTank {
 
     destroy() {
         this.destroyed = true;
+        if (this.model) this.scene.remove(this.model);
+        if (this.collider) this.scene.remove(this.collider);
+    }
+
+    spawn(x, z) {
+        this.position.set(x, 0, z);
         if (this.model) {
-            this.scene.remove(this.model);
+            this.model.position.set(0, 0, 0);
+            this.model.rotation.set(0, Math.PI, 0); // Поворот на 180°
+            this.model.updateMatrixWorld(true);
+            
+            // Установка позиции
+            this.model.position.copy(this.position);
+            this.scene.add(this.model);
         }
+    }
+
+}
+
+export class BasicEnemy extends EnemyTank {
+    constructor(scene, game) {
+        super(scene, game);
+        this.speed = 0.03;
+        this.health = 1;
+        this.color = 0xff0000;
+    }
+}
+
+export class FastEnemy extends EnemyTank {
+    constructor(scene, game) {
+        super(scene, game);
+        this.speed = 0.06;
+        this.health = 1;
+        this.color = 0xffff00;
+        this.shootCooldown = 1500;
+    }
+}
+
+export class HeavyEnemy extends EnemyTank {
+    constructor(scene, game) {
+        super(scene, game);
+        this.speed = 0.02;
+        this.health = 3;
+        this.color = 0x800080;
+        this.shootCooldown = 3000;
     }
 }

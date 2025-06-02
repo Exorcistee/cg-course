@@ -1,61 +1,79 @@
 export class Projectile {
-    constructor(scene, position, direction, source) {
+    constructor(scene, game, position, direction, source) {
         this.scene = scene;
-        this.position = position;
-        this.direction = direction;
-        this.speed = 0.3;
-        this.source = source; // 'player' or 'enemy'
+        this.game = game;
+        this.position = position.clone();
+        this.direction = direction.clone().normalize();
+        this.speed = 0.5;
+        this.source = source; // 'player' или 'enemy'
         this.destroyed = false;
         
+        // Создаем меш снаряда
         this.mesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.2, 8, 8),
-            new THREE.MeshStandardMaterial({ 
+            new THREE.MeshBasicMaterial({ 
                 color: source === 'player' ? 0x00FF00 : 0xFF0000 
             })
         );
-        this.mesh.position.copy(position);
+        this.mesh.position.copy(this.position);
         this.scene.add(this.mesh);
     }
 
     update() {
         if (this.destroyed) return;
         
+        // Движение снаряда
         this.position.add(this.direction.clone().multiplyScalar(this.speed));
         this.mesh.position.copy(this.position);
         
+        // Проверка столкновений с картой
         const collidedBlock = this.game.map.checkCollision(this.position, 0.2);
-        if (collidedBlock) {
-            if (collidedBlock.userData.type === 'brick') {
-                this.scene.remove(collidedBlock);
-                this.game.map.grid = this.game.map.grid.filter(b => b !== collidedBlock);
-            }
+        if (collidedBlock && collidedBlock.userData.destructible) {
+            this.game.scene.remove(collidedBlock);
+            this.game.map.grid = this.game.map.grid.filter(b => b !== collidedBlock);
             this.destroy();
             return;
         }
         
+        // Проверка попадания в танки
         if (this.source === 'player') {
+            // Проверка по вражеским танкам
             for (const enemy of this.game.enemies) {
-                if (!enemy.destroyed && this.position.distanceTo(enemy.position) < 1) {
+                if (!enemy.destroyed && this.checkTankHit(enemy)) {
                     enemy.takeDamage();
                     this.destroy();
                     return;
                 }
             }
         } else {
-            if (!this.game.player.destroyed && 
-                this.position.distanceTo(this.game.player.position) < 1) {
+            // Проверка по игроку
+            if (this.game.player && !this.game.player.destroyed && 
+                this.checkTankHit(this.game.player)) {
                 this.game.player.takeDamage();
                 this.destroy();
                 return;
             }
         }
         
-        // Destroy if out of bounds
+        // Уничтожение снаряда за пределами карты
         const mapSize = this.game.map.mapSize * this.game.map.blockSize;
         if (Math.abs(this.position.x) > mapSize/2 || 
             Math.abs(this.position.z) > mapSize/2) {
             this.destroy();
         }
+    }
+
+    checkTankHit(tank) {
+        if (!tank.model || tank.destroyed) return false;
+        
+        // Создаем ограничивающую сферу для танка
+        const tankBoundingSphere = new THREE.Sphere(
+            tank.position,
+            tank.tankSize * 0.5 // Радиус коллизии
+        );
+        
+        // Проверяем пересечение со снарядом
+        return tankBoundingSphere.containsPoint(this.position);
     }
 
     destroy() {
